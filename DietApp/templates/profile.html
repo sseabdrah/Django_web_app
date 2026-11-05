@@ -46,6 +46,7 @@
                     <div><dt>Gender</dt><dd>{{ profile.get_gender_display|default:"Not provided" }}</dd></div>
                     <div><dt>Activity level</dt><dd>{{ profile.get_activity_level_display|default:"Not provided" }}</dd></div>
                     <div><dt>Dietary preferences</dt><dd>{% if profile.dietary_preferences %}{{ profile.dietary_preferences|join:", " }}{% else %}Not provided{% endif %}</dd></div>
+                    <div><dt>Goal weight</dt><dd>{% if profile.goal_weight_kg %}{{ profile.goal_weight_kg }} kg{% else %}Not set{% endif %}</dd></div>
                     <div><dt>Health goal</dt><dd>{{ profile.get_health_goal_display|default:"Not set" }}</dd></div>
                 </dl>
             {% else %}<p class="empty">Add your profile details to personalize your targets.</p>{% endif %}

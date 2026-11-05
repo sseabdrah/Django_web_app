@@ -62,7 +62,7 @@
     <section class="progress-summary" aria-label="Progress summary">
         <div class="summary-tile"><span>Current weight</span><strong>{% if current_weight %}{{ current_weight.weight_kg }} <small>kg</small>{% else %}Not logged{% endif %}</strong></div>
         <div class="summary-tile"><span>Starting weight</span><strong>{% if starting_weight %}{{ starting_weight.weight_kg }} <small>kg</small>{% else %}Not logged{% endif %}</strong></div>
-        <div class="summary-tile"><span>Daily calorie target</span><strong>{{ calorie_target }} <small>kcal</small></strong></div>
+        <div class="summary-tile"><span>Goal weight</span><strong>{% if goal_weight %}{{ goal_weight }} <small>kg</small>{% else %}Not set{% endif %}</strong><span>Daily calorie target: {{ calorie_target }} kcal</span></div>
     </section>
     <div class="progress-grid">
         <figure class="progress-card">

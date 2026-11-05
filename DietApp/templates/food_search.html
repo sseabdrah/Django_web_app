@@ -12,6 +12,7 @@
             </div>
         </form>
     </section>
+    <details class="panel"><summary><strong>Barcode lookup (manual)</strong></summary><p>Enter the barcode number to look it up in the food library. Camera scanning is not available.</p><form method="get"><label for="barcode-query">Barcode number</label><input id="barcode-query" name="q" inputmode="numeric" pattern="[0-9]+" required><button type="submit">Find barcode</button></form></details>
     {% if recent_logs %}<section class="panel"><h2>Recently logged</h2><div class="action-row">{% for log in recent_logs %}<a class="action secondary" href="{% url 'log_food_portion' log.food_id.pk %}">{{ log.food_id.name }} · {{ log.food_id.calories }} kcal</a>{% endfor %}</div></section>{% endif %}
     <section class="panel" aria-labelledby="food-results-title">
         <h2 id="food-results-title">Foods</h2>

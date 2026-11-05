@@ -19,11 +19,12 @@
     </section>
     <section class="panel" aria-labelledby="recipe-ingredients-title">
         <h2 id="recipe-ingredients-title">Ingredients</h2>
-        {% if ingredients %}<ul>{% for ingredient in ingredients %}<li>{{ ingredient.quantity }} {{ ingredient.unit }} {% if ingredient.food_id %}{{ ingredient.food_id.name }}{% else %}{{ ingredient.ingredient_name }}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="empty">No ingredients have been added yet.</p>{% endif %}
+        {% if ingredients %}<form method="post" action="{% url 'add_ingredients' recipe.pk %}">{% csrf_token %}{% for ingredient in ingredients %}<label style="padding:6px 0"><input type="checkbox" name="ingredients" value="{{ ingredient.pk }}">{{ ingredient.quantity }} {{ ingredient.unit }} {% if ingredient.food_id %}{{ ingredient.food_id.name }}{% else %}{{ ingredient.ingredient_name }}{% endif %}</label>{% endfor %}<button type="submit">Add selected to shopping list</button></form><p><a href="{% url 'shopping_list' %}">View shopping list</a></p>{% else %}<p class="empty">No ingredients have been added yet.</p>{% endif %}
     </section>
     <section class="panel" aria-labelledby="recipe-instructions-title">
         <h2 id="recipe-instructions-title">Instructions</h2>
         {% if recipe.instructions %}<ol>{% for instruction in recipe.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>{% else %}<p class="empty">No instructions have been added yet.</p>{% endif %}
     </section>
+    <section class="panel"><h2>Reviews</h2>{% for review in reviews %}<article style="border-top:1px solid var(--line);padding:12px 0"><strong>{{ review.user.full_name }} · {{ review.rating }}/5</strong><p>{{ review.comment }}</p><small>{{ review.updated_at|date:"M j, Y" }}</small></article>{% empty %}<p>No reviews yet.</p>{% endfor %}<h3>Write or update your review</h3><form method="post" action="{% url 'save_recipe_review' recipe.pk %}">{% csrf_token %}{{ review_form.as_p }}<button type="submit">Save review</button></form></section>
     <div class="action-row"><a class="action" href="{% url 'log_recipe' recipe.pk %}">Log this meal</a><a class="action" href="{% url 'model_form' 'meal-plans' %}?recipe_id={{ recipe.pk }}">Add to meal plan</a><form method="post" action="{% url 'toggle_recipe_favorite' recipe.pk %}">{% csrf_token %}<button type="submit">{% if is_favorite %}Remove from favorites{% else %}Save recipe{% endif %}</button></form><a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
 {% endblock %}
