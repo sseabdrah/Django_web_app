@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1877f2">
+    <title>{% block title %}Administration · Diet Services{% endblock %}</title>
+    <style>
+        :root { --admin-ink: #203343; --admin-muted: #5d7180; --admin-green: #1877f2; --admin-pale: #eaf3ff; --admin-coral: #d28a26; --admin-line: #d3e2f5; --admin-paper: #fff; --admin-bg: #f7faff; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; margin: 0; background: var(--admin-bg); color: var(--admin-ink); font-family: "Aptos", "Segoe UI", sans-serif; }
+        a { color: var(--admin-green); }
+        .admin-shell { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+        .admin-sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 22px 15px; background: var(--admin-pale); border-right: 1px solid var(--admin-line); }
+        .admin-brand { display: flex; align-items: center; gap: 10px; min-height: 48px; margin: 0 7px 30px; color: var(--admin-ink); font-size: 17px; font-weight: 800; text-decoration: none; }
+        .admin-brand-logo { display: block; width: 44px; height: 44px; flex: 0 0 44px; object-fit: contain; }
+        .admin-nav-label { margin: 0 8px 8px; color: var(--admin-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .admin-nav { display: grid; gap: 4px; }
+        .admin-nav a { display: flex; min-height: 40px; align-items: center; gap: 10px; padding: 0 10px; color: var(--admin-ink); font-size: 13px; font-weight: 700; text-decoration: none; }
+        .admin-nav a:hover, .admin-nav a[aria-current="page"] { background: var(--admin-green); color: #fff; }
+        .admin-nav-icon { width: 22px; text-align: center; }
+        .admin-account { margin-top: auto; padding: 14px 8px 2px; border-top: 1px solid var(--admin-line); }
+        .admin-account strong, .admin-account span { display: block; overflow-wrap: anywhere; }
+        .admin-account span { margin-top: 4px; color: var(--admin-muted); font-size: 11px; }
+        .admin-main { min-width: 0; }
+        .admin-header { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px clamp(18px, 3vw, 42px); border-bottom: 1px solid var(--admin-line); background: var(--admin-paper); }
+        .admin-header h1 { margin: 0; color: var(--admin-ink); font-size: 18px; }
+        .admin-header-actions { display: flex; align-items: center; gap: 12px; }
+        .admin-header-actions a { font-size: 12px; font-weight: 700; text-decoration: none; }
+        .admin-header form { margin: 0; }
+        .admin-header button { min-height: 34px; padding: 0 12px; border: 1px solid var(--admin-line); background: white; color: var(--admin-ink); font: inherit; font-size: 12px; cursor: pointer; }
+        .admin-content { max-width: 1440px; margin: 0 auto; padding: 26px clamp(18px, 3vw, 42px) 60px; }
+        .admin-content h2 { margin: 0; font-size: 17px; }
+        .admin-intro { margin: 6px 0 22px; color: var(--admin-muted); font-size: 13px; }
+        .admin-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .admin-stat { min-height: 96px; padding: 15px; border: 1px solid var(--admin-line); background: white; text-decoration: none; }
+        .admin-stat span { display: block; color: var(--admin-muted); font-size: 11px; font-weight: 700; }
+        .admin-stat strong { display: block; margin-top: 10px; color: var(--admin-green); font-size: 25px; }
+        .admin-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .9fr); gap: 15px; }
+        .admin-panel { min-width: 0; margin-bottom: 15px; border: 1px solid var(--admin-line); background: white; }
+        .admin-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--admin-line); }
+        .admin-panel-heading a { font-size: 12px; font-weight: 700; text-decoration: none; }
+        .admin-panel-body { padding: 14px 15px; }
+        .admin-table-wrap { overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .admin-table th, .admin-table td { padding: 10px; border-bottom: 1px solid var(--admin-line); text-align: left; vertical-align: top; }
+        .admin-table th { background: var(--admin-bg); color: var(--admin-muted); font-size: 10px; text-transform: uppercase; }
+        .admin-table tr:last-child td { border-bottom: 0; }
+        .admin-table td a { font-weight: 700; text-decoration: none; }
+        .admin-empty { padding: 16px 0; color: var(--admin-muted); font-size: 13px; }
+        .admin-form { max-width: 760px; padding: 20px; border: 1px solid var(--admin-line); background: white; }
+        .admin-form p { margin: 0 0 16px; }
+        .admin-form label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 700; }
+        .admin-form input, .admin-form select, .admin-form textarea, .admin-search input { width: 100%; min-height: 40px; padding: 9px 10px; border: 1px solid var(--admin-line); background: #fff; color: var(--admin-ink); font: inherit; font-size: 13px; }
+        .admin-form textarea { min-height: 110px; }
+        .admin-form input[type="checkbox"] { width: 17px; min-height: 17px; height: 17px; }
+        .admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0; }
+        .admin-button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; padding: 0 13px; border: 1px solid var(--admin-green); background: var(--admin-green); color: white; font: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
+        .admin-button.secondary { background: white; color: var(--admin-green); }
+        .admin-button.danger { border-color: #b94d39; background: #b94d39; }
+        .admin-actions form { margin: 0; }
+        .admin-search { display: flex; gap: 8px; max-width: 520px; margin: 0 0 15px; }
+        .admin-search button { flex: 0 0 auto; }
+        .admin-pagination { display: flex; justify-content: space-between; margin-top: 14px; color: var(--admin-muted); font-size: 12px; }
+        .admin-bars { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; height: 180px; align-items: end; padding: 10px 0 0; }
+        .admin-bar-item { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 7px; color: var(--admin-muted); font-size: 11px; }
+        .admin-bar-track { width: 100%; height: 135px; display: flex; align-items: end; background: var(--admin-bg); }
+        .admin-bar { width: 100%; min-height: 2px; background: var(--admin-green); }
+        .admin-message { margin-bottom: 12px; padding: 10px 12px; border-left: 3px solid var(--admin-coral); background: white; font-size: 13px; }
+        .ai-float { position: fixed; z-index: 20; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); display: grid; width: 48px; height: 48px; place-items: center; border: 0; background: var(--admin-coral); color: #fff; box-shadow: 0 4px 14px #25342f30; font-size: 20px; text-decoration: none; }
+        .ai-float:hover { background: #b9781e; }
+        .ai-float:focus-visible { outline: 3px solid #25342f; outline-offset: 3px; }
+        @media (max-width: 980px) { .admin-shell { grid-template-columns: 205px minmax(0, 1fr); } .admin-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 680px) { .admin-shell { display: block; } .admin-sidebar { position: static; height: auto; padding: 12px; } .admin-brand { margin: 0 5px 10px; } .admin-nav-label, .admin-account { display: none; } .admin-nav { display: flex; overflow-x: auto; gap: 4px; padding-bottom: 3px; } .admin-nav a { flex: 0 0 auto; min-height: 38px; padding: 0 9px; font-size: 11px; } .admin-nav-icon { width: auto; } .admin-header { min-height: 58px; } .admin-grid { grid-template-columns: 1fr; } .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-content { padding-bottom: 92px; } .ai-float { left: 12px; bottom: calc(70px + env(safe-area-inset-bottom)); } }
+    </style>
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="admin-sidebar" aria-label="Administrator navigation">
+        <a class="admin-brand" href="{% url 'admin_dashboard' %}"><img class="admin-brand-logo" src="{% static 'DietApp/images/diet-services-logo.png' %}" alt=""><span>Diet Services</span></a>
+        <p class="admin-nav-label">Platform</p>
+        <nav class="admin-nav">
+            <a href="{% url 'admin_dashboard' %}"{% if request.resolver_match.url_name == 'admin_dashboard' %} aria-current="page"{% endif %}><span class="admin-nav-icon">⌂</span>Overview</a>
+            {% if request.user.is_superuser or perms.DietApp.view_users %}<a href="{% url 'admin_users' %}"{% if request.resolver_match.url_name == 'admin_users' %} aria-current="page"{% endif %}><span class="admin-nav-icon">♙</span>Users</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_users %}<a href="{% url 'admin_payments' %}"{% if request.resolver_match.url_name == 'admin_payments' %} aria-current="page"{% endif %}><span class="admin-nav-icon">P</span>Payments{% if unseen_payment_count %}<strong aria-label="{{ unseen_payment_count }} new payments">{{ unseen_payment_count }}</strong>{% endif %}</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_food %}<a href="{% url 'admin_catalog' 'foods' %}"{% if request.resolver_match.kwargs.catalog_slug == 'foods' %} aria-current="page"{% endif %}><span class="admin-nav-icon">◉</span>Food management</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_recipe %}<a href="{% url 'admin_catalog' 'recipes' %}"{% if request.resolver_match.kwargs.catalog_slug == 'recipes' %} aria-current="page"{% endif %}><span class="admin-nav-icon">▤</span>Recipes</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_mealplan %}<a href="{% url 'admin_catalog' 'diet-plans' %}"{% if request.resolver_match.kwargs.catalog_slug == 'diet-plans' %} aria-current="page"{% endif %}><span class="admin-nav-icon">▦</span>Diet plans</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_supportquestion %}<a href="{% url 'admin_support' %}"{% if request.resolver_match.url_name == 'admin_support' or request.resolver_match.url_name == 'admin_support_answer' %} aria-current="page"{% endif %}><span class="admin-nav-icon">?</span>Support questions</a>{% endif %}
+            {% if request.user.is_superuser or perms.DietApp.view_users %}<a href="{% url 'admin_reports' %}"{% if request.resolver_match.url_name == 'admin_reports' %} aria-current="page"{% endif %}><span class="admin-nav-icon">▥</span>Reports</a>{% endif %}
+        </nav>
+        <div class="admin-account"><strong>{{ request.user.get_username }}</strong><span>Administrator workspace</span></div>
+    </aside>
+    <div class="admin-main">
+        <header class="admin-header"><h1>{% block page_title %}Administration{% endblock %}</h1><div class="admin-header-actions"><a href="{% url 'support' %}">Help &amp; Support</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form></div></header>
+        <main class="admin-content">
+            {% for message in messages %}<div class="admin-message" role="status">{{ message }}</div>{% endfor %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+<a class="ai-float" href="{% url 'diet_ai' %}" aria-label="Ask Diet AI" title="Ask Diet AI">✦</a>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Ask Diet AI - Diet Services{% endblock %}
+{% block page_navigation %}{% endblock %}
+{% block page_styles %}
+<style>
+    .support-page { max-width: 860px; margin: 0 auto; }
+    .support-heading { margin-bottom: 24px; }
+    .support-heading h1 { margin-bottom: 7px; }
+    .support-heading p { max-width: 62ch; margin: 0; color: var(--muted); line-height: 1.6; }
+    .diet-ai-status { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    .diet-ai-status::before { width: 8px; height: 8px; border-radius: 50%; background: {% if diet_ai_configured %}#2c9b67{% else %}#d28a26{% endif %}; content: ""; }
+    .support-question { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+    .support-question input { min-width: 0; }
+    .support-question button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 6px; background: var(--primary-blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    .support-examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+    .support-example { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 18px; background: #fff; color: var(--primary-blue); font: inherit; font-size: 12px; cursor: pointer; }
+    .support-answer { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-left: 4px solid var(--primary-blue); background: #fff; }
+    .support-answer-label { margin: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .support-answer h2 { margin: 0 0 9px; font-size: 18px; font-weight: 700; }
+    .support-answer-copy { margin: 0; color: var(--ink); line-height: 1.6; }
+    .support-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .support-rating { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 19px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .support-rating legend { width: 100%; margin-bottom: 2px; color: var(--ink); font-size: 13px; font-weight: 700; }
+    .support-rating label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-weight: 500; }
+    .support-rating input[type="radio"] { width: auto; min-height: 0; height: auto; margin: 0; }
+    .support-feedback-comment { margin-top: 12px; }
+    .support-feedback-comment textarea { min-height: 76px; }
+    .support-feedback-submit { min-height: 38px; margin-top: 10px; padding: 0 14px; border: 0; border-radius: 5px; background: var(--primary-blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    .support-topics { margin-top: 24px; }
+    .support-topics h2 { margin: 0 0 12px; font-size: 17px; font-weight: 700; }
+    .support-topic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .support-topic { display: block; min-height: 74px; padding: 13px; border: 1px solid var(--line); background: var(--paper); color: var(--primary-blue); font-size: 13px; font-weight: 700; text-decoration: none; }
+    .support-topic span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; font-weight: 400; }
+    @media (max-width: 600px) { .support-question { grid-template-columns: 1fr; } .support-question button { width: 100%; } .support-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .support-answer { padding: 16px; } }
+</style>
+{% endblock %}
+{% block content %}
+<section class="support-page" aria-labelledby="support-title">
+    <header class="support-heading">
+        <h1 id="support-title">Ask Diet AI</h1>
+        <p>Your Diet Services assistant. Ask a question, or ask to open a section and I’ll guide you there.</p>
+        {% if diet_ai_configured %}<span class="diet-ai-status">AI responses enabled</span>{% else %}<span class="diet-ai-status">Quick app guidance active. Configure OPENAI_API_KEY to enable generated AI responses.</span>{% endif %}
+    </header>
+
+    <section class="panel" aria-label="Ask the support assistant">
+        <form method="post" class="support-question">
+            {% csrf_token %}
+            {{ question_form.question }}
+            {% if question_form.question.errors %}<div class="errorlist">{{ question_form.question.errors }}</div>{% endif %}
+            <button type="submit">Ask Diet AI</button>
+        </form>
+        <div class="support-examples" aria-label="Example questions">
+            <button class="support-example" type="button" data-question="How do I log food?">Log food</button>
+            <button class="support-example" type="button" data-question="Where do I plan meals?">Plan meals</button>
+            <button class="support-example" type="button" data-question="How do I track water?">Track water</button>
+            <button class="support-example" type="button" data-question="Take me to my progress">View progress</button>
+            <button class="support-example" type="button" data-question="How do I change my goals?">Change goals</button>
+        </div>
+    </section>
+
+    {% if support_result %}
+        <section class="support-answer" aria-live="polite" aria-labelledby="answer-title">
+            <p class="support-answer-label">{{ support_result.answer_source }} · Your question</p>
+            <p class="support-answer-copy">{{ support_result.question }}</p>
+            <h2 id="answer-title">{% if support_result.answer_source == "Submitted to support" %}Question sent to support{% else %}Here’s how I can help{% endif %}</h2>
+            <p class="support-answer-copy">{{ support_result.answer }}</p>
+            <div class="support-links">
+                {% if support_result.action == "logout" %}
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="action" type="submit">Log out</button>
+                    </form>
+                {% elif support_result.link_url %}
+                    <a class="action" href="{{ support_result.link_url }}">{{ support_result.link_label }}</a>
+                {% endif %}
+                {% if support_result.secondary_link_url %}<a class="action secondary" href="{{ support_result.secondary_link_url }}">{{ support_result.secondary_link_label }}</a>{% endif %}
+            </div>
+            {% if feedback_form %}
+                <form method="post" class="support-feedback">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="feedback">
+                    {{ feedback_form.question }}
+                    {{ feedback_form.topic }}
+                    <fieldset class="support-rating">
+                        <legend>Did you get the help you needed?</legend>
+                        {% for radio in feedback_form.helpful %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+                        {% if feedback_form.helpful.errors %}<div class="errorlist">{{ feedback_form.helpful.errors }}</div>{% endif %}
+                    </fieldset>
+                    <div class="support-feedback-comment">{{ feedback_form.comment }}</div>
+                    {% if feedback_form.comment.errors %}<div class="errorlist">{{ feedback_form.comment.errors }}</div>{% endif %}
+                    <button class="support-feedback-submit" type="submit">Send feedback</button>
+                </form>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    <section class="support-topics" aria-labelledby="support-topics-title">
+        <h2 id="support-topics-title">Browse help topics</h2>
+        <div class="support-topic-grid">
+            <a class="support-topic" href="{% url 'food_search' %}">Food &amp; recipes<span>Search and log meals</span></a>
+            <a class="support-topic" href="{% url 'meal_plan' %}">Meal planning<span>Review and plan meals</span></a>
+            <a class="support-topic" href="{% url 'model_form' 'water-logs' %}">Water tracking<span>Log your hydration</span></a>
+            <a class="support-topic" href="{% url 'goals' %}">Goals &amp; targets<span>Manage nutrition targets</span></a>
+            <a class="support-topic" href="{% url 'progress' %}">Progress<span>Review trends and weight</span></a>
+            <a class="support-topic" href="{% url 'profile' %}">Profile<span>Measurements and preferences</span></a>
+        </div>
+    </section>
+</section>
+<script>
+    document.querySelectorAll(".support-example").forEach((button) => {
+        button.addEventListener("click", () => {
+            const questionInput = document.querySelector(".support-question input[name='question']");
+            questionInput.value = button.dataset.question;
+            questionInput.focus();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1877F2">
+    <title>Login - Diet Services</title>
+    <style>
+        :root { --blue: #1877f2; --sky-blue: #4595ff; --amber: #d28a26; --pale-blue: #eaf3ff; --ink: #203343; --line: #d3e2f5; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; margin: 0; display: grid; grid-template-rows: auto 1fr auto; background: linear-gradient(rgba(247, 250, 255, .92), rgba(247, 250, 255, .92)), var(--pale-blue) url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1800&q=85") center / cover fixed; color: var(--ink); font-family: "Aptos", "Segoe UI", sans-serif; }
+        header, footer { background: var(--blue); color: white; }
+        header { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px clamp(24px, 7vw, 104px); }
+        .brand { display: inline-flex; min-height: 52px; align-items: center; gap: 10px; color: white; font: 700 25px "Aptos", "Segoe UI", sans-serif; text-decoration: none; }
+        .brand img { display: block; width: 48px; height: 48px; flex: 0 0 48px; object-fit: contain; }
+        nav { display: flex; align-items: center; gap: 24px; }
+        nav a { color: white; font-size: 14px; font-weight: 700; text-decoration: none; }
+        main { width: min(480px, 100%); align-self: center; margin: 48px auto; padding: 0 24px; }
+        .form-panel { padding: clamp(24px, 6vw, 42px); border: 1px solid var(--line); border-radius: 3px; background: #f7faff; box-shadow: 0 16px 40px #1b1b1b12, 8px 8px 0 var(--line); }
+        h1 { margin: 0 0 8px; color: var(--blue); font: 400 40px "Aptos", "Segoe UI", sans-serif; }
+        .intro { margin: 0 0 28px; line-height: 1.6; }
+        label { display: block; margin: 19px 0 7px; color: #2d4d68; font-size: 14px; font-weight: 700; }
+        .role-select { min-width: 0; margin: 0; padding: 0; border: 0; }
+        .role-select legend { margin: 19px 0 7px; color: #2d4d68; font-size: 14px; font-weight: 700; }
+        .role-options { display: flex; gap: 10px; }
+        .role-options > div { flex: 1; }
+        .role-options label { display: flex; min-height: 47px; align-items: center; gap: 9px; margin: 0; padding: 10px 12px; border: 1px solid #c5d8f2; border-radius: 7px; background: #fcfefc; cursor: pointer; }
+        .role-options label:has(input:checked) { border-color: var(--blue); background: var(--pale-blue); }
+        .role-options input { width: auto; min-height: 0; margin: 0; accent-color: var(--blue); }
+        .role-options input:focus-visible { outline: 3px solid #4595ff80; outline-offset: 3px; }
+        input, select { width: 100%; min-height: 47px; padding: 11px 13px; border: 1px solid #c5d8f2; border-radius: 7px; background: #fcfefc; color: var(--ink); font: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
+        input:hover, select:hover { border-color: var(--sky-blue); background: white; }
+        input:focus, select:focus { outline: 3px solid #4595ff40; border-color: var(--blue); background: white; box-shadow: 0 0 0 1px var(--blue); }
+        button { width: 100%; min-height: 49px; margin-top: 26px; border: 0; border-radius: 7px; background: var(--blue); color: white; font: 700 15px "Aptos", "Segoe UI", sans-serif; cursor: pointer; transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+        button:hover { transform: translateY(-1px); background: #1464d8; box-shadow: 0 5px 12px #1877f230; }
+        button:focus-visible { outline: 3px solid #4595ff80; outline-offset: 3px; }
+        [role="alert"] { margin: 0 0 12px; padding: 10px 12px; border-radius: 6px; background: #fff3f1; color: #b3261e; font-size: 13px; }
+        .errorlist { margin: 7px 0 0; padding: 8px 11px 8px 28px; border-radius: 6px; background: #fff3f1; color: #b3261e; font-size: 13px; }
+        .switch-page { margin: 22px 0 0; text-align: center; font-size: 14px; }
+        .switch-page a { color: var(--blue); font-weight: 700; }
+        footer { min-height: 64px; display: grid; place-items: center; padding: 16px 24px; font-size: 13px; text-align: center; }
+        @media (max-width: 520px) { header { align-items: flex-start; flex-direction: column; gap: 12px; } nav { gap: 18px; } h1 { font-size: 36px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="brand" href="{% url 'home' %}"><img src="{% static 'DietApp/images/diet-services-logo.png' %}" alt="">Diet Services</a>
+        <nav aria-label="Main navigation">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'register' %}">Register</a>
+        </nav>
+    </header>
+    <main>
+        <section class="form-panel" aria-labelledby="login-title">
+            <h1 id="login-title">Welcome back</h1>
+            <p class="intro">Log in to continue tracking your nutrition goals.</p>
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <fieldset class="role-select">
+                    <legend>Log in as</legend>
+                    {{ form.role }}
+                    {{ form.role.errors }}
+                </fieldset>
+                <label for="email">Email address</label>
+                {{ form.email }}
+                {{ form.email.errors }}
+                <label for="password">Password</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+                <button type="submit">Log in</button>
+            </form>
+            <p class="switch-page"><a href="{% url 'password_reset_request' %}">Forgot your password?</a></p>
+            <p class="switch-page">New to Diet Services? <a href="{% url 'register' %}">Create an account</a></p>
+        </section>
+    </main>
+    <footer>&copy; 2026 Diet Services. All rights reserved.</footer>
+</body>
+</html>

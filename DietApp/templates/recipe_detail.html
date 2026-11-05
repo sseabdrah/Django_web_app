@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.name }} - Diet Services{% endblock %}
+{% block content %}
+    <h1>{{ recipe.name }}</h1>
+    <p class="intro">{{ recipe.description }}</p>
+    <section class="panel" aria-label="Recipe nutrition and preparation">
+        <dl class="record-list">
+            <div><dt>Per serving</dt><dd>{{ recipe.calories_per_serving }} kcal</dd></div>
+            <div><dt>Protein</dt><dd>{{ recipe.protein_per_serving|floatformat:1 }} g</dd></div>
+            <div><dt>Carbohydrates</dt><dd>{{ recipe.carbs_per_serving|floatformat:1 }} g</dd></div>
+            <div><dt>Fat</dt><dd>{{ recipe.fat_per_serving|floatformat:1 }} g</dd></div>
+            <div><dt>Servings</dt><dd>{{ recipe.servings }}</dd></div>
+            <div><dt>Total time</dt><dd>{{ recipe.total_time_minutes }} minutes</dd></div>
+            {% if recipe.dietary_tags %}<div><dt>Dietary tags</dt><dd>{{ recipe.dietary_tags|join:", " }}</dd></div>{% endif %}
+        </dl>
+    </section>
+    <section class="panel" aria-labelledby="recipe-ingredients-title">
+        <h2 id="recipe-ingredients-title">Ingredients</h2>
+        {% if ingredients %}<ul>{% for ingredient in ingredients %}<li>{{ ingredient.quantity }} {{ ingredient.unit }} {% if ingredient.food_id %}{{ ingredient.food_id.name }}{% else %}{{ ingredient.ingredient_name }}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="empty">No ingredients have been added yet.</p>{% endif %}
+    </section>
+    <section class="panel" aria-labelledby="recipe-instructions-title">
+        <h2 id="recipe-instructions-title">Instructions</h2>
+        {% if recipe.instructions %}<ol>{% for instruction in recipe.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>{% else %}<p class="empty">No instructions have been added yet.</p>{% endif %}
+    </section>
+    <div class="action-row"><a class="action" href="{% url 'model_form' 'meal-plans' %}?recipe_id={{ recipe.pk }}">Add to meal plan</a>{% if not is_favorite %}<a class="action secondary" href="{% url 'model_form' 'favorite-recipes' %}">Save to favorites</a>{% endif %}<a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
+{% endblock %}

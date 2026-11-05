@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Getting Started - Diet Services{% endblock %}
+{% block content %}
+    <h1>Getting started</h1>
+    <p class="intro">Set up the details that make your nutrition tracker personal.</p>
+    <section class="panel" aria-labelledby="setup-checklist-title">
+        <h2 id="setup-checklist-title">Your setup</h2>
+        <ol style="display:grid; gap:20px; padding-left:24px;">
+            <li><strong>{% if profile_complete %}Profile added{% else %}Add your profile{% endif %}</strong><p>Measurements, activity level, and dietary preferences.</p><a class="action secondary" href="{% if profile_complete %}{% url 'profile_edit' %}{% else %}{% url 'profile_add' %}{% endif %}">{% if profile_complete %}Review profile{% else %}Set up profile{% endif %}</a></li>
+            <li><strong>{% if goals_complete %}Health goal added{% else %}Choose your health goal{% endif %}</strong><p>Set nutrition and hydration targets to see daily progress.</p><a class="action secondary" href="{% url 'goals_edit' %}">Set goals</a></li>
+            <li><strong>{% if settings_complete %}Preferences saved{% else %}Choose your preferences{% endif %}</strong><p>Select units, language, appearance, and notifications.</p><a class="action secondary" href="{% url 'settings_edit' %}">Set preferences</a></li>
+        </ol>
+    </section>
+    <div class="action-row"><a class="action" href="{% url 'dashboard' %}">Go to dashboard</a></div>
+{% endblock %}

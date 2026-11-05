@@ -1,0 +1,8 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Reports · Diet Services{% endblock %}
+{% block page_title %}Reports and analytics{% endblock %}
+{% block content %}
+<p class="admin-intro">Current platform totals calculated from the application database.</p>
+<section class="admin-stats" aria-label="Platform totals"><div class="admin-stat"><span>Registered users</span><strong>{{ users_count }}</strong></div><div class="admin-stat"><span>Active accounts</span><strong>{{ active_users }}</strong></div><div class="admin-stat"><span>Foods</span><strong>{{ food_count }}</strong></div><div class="admin-stat"><span>Recipes</span><strong>{{ recipe_count }}</strong></div><div class="admin-stat"><span>Diet plans</span><strong>{{ plan_count }}</strong></div></section>
+<section class="admin-panel"><header class="admin-panel-heading"><h2>Support requests</h2><a href="{% url 'admin_support' %}">Open support queue</a></header><div class="admin-panel-body"><dl class="record-list"><div><dt>Pending</dt><dd>{{ support_pending }}</dd></div><div><dt>Answered</dt><dd>{{ support_answered }}</dd></div><div><dt>Total</dt><dd>{{ support_pending|add:support_answered }}</dd></div></dl></div></section>
+{% endblock %}

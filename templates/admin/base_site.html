@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Diet Administration{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name"><a href="{% url 'admin:index' %}"><img class="admin-brand-logo" src="{% static 'DietApp/images/diet-services-logo.png' %}" alt="">Diet Administration</a></h1>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs"><a href="{{ previous_page_url }}">&larr; Previous page</a></div>
+    {{ block.super }}
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        :root {
+            --primary: #1877F2;
+            --secondary: #1877F2;
+            --accent: #D28A26;
+            --header-bg: #1877F2;
+            --header-color: #FFFFFF;
+            --breadcrumbs-bg: #1877F2;
+            --link-fg: #1877F2;
+            --link-hover-color: #1464D8;
+            --link-selected-fg: #1877F2;
+            --button-bg: #D28A26;
+            --button-hover-bg: #1877F2;
+            --default-button-bg: #1877F2;
+            --default-button-hover-bg: #1464D8;
+        }
+
+        body { background: linear-gradient(rgba(247, 250, 255, .92), rgba(247, 250, 255, .92)), #eaf3ff url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1800&q=85") center / cover fixed; font-family: "Aptos", "Segoe UI", sans-serif; }
+        #header { background: #1877F2; color: #FFFFFF; }
+        #branding h1, #branding h1 a:link, #branding h1 a:visited { color: #FFFFFF; }
+        #branding h1 a { display: inline-flex; align-items: center; gap: 8px; }
+        .admin-brand-logo { width: 38px; height: 38px; object-fit: contain; }
+        .module h2, .module caption, .inline-group h2 { background: #1877F2; }
+        div.breadcrumbs { background: #1877F2; }
+        a:link, a:visited { color: #1877F2; }
+        a:hover { color: #1464D8; }
+        .button, input[type=submit], input[type=button], .submit-row input, a.button {
+            background: #D28A26;
+            color: #FFFFFF;
+        }
+        .button:hover, input[type=submit]:hover, input[type=button]:hover,
+        .submit-row input:hover, a.button:hover { background: #1877F2; }
+        .login #container { border: 1px solid #d3e2f5; }
+    </style>
+{% endblock %}

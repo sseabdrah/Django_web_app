@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Plan &amp; billing · Diet Services{% endblock %}
+{% block content %}
+<style>
+    .billing-page { max-width: 920px; margin: 0 auto; }
+    .billing-page h1 { margin-bottom: 8px; }
+    .billing-lead { max-width: 62ch; margin: 0 0 24px; color: var(--muted); line-height: 1.6; }
+    .billing-status { margin: 0 0 24px; padding: 18px 20px; border-left: 4px solid var(--primary-blue); background: #fff; }
+    .billing-status strong { display: block; margin-bottom: 5px; color: var(--ink); }
+    .billing-status p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .billing-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .billing-plan { min-width: 0; padding: 20px; border: 1px solid var(--line); background: #fff; }
+    .billing-plan h2 { margin: 0 0 10px; color: var(--ink); font-size: 19px; }
+    .billing-price { margin: 0; color: var(--primary-blue); font-size: 30px; font-weight: 800; }
+    .billing-price small { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .billing-plan p:last-child { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .billing-methods { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .billing-methods h2 { margin: 0 0 7px; color: var(--ink); font-size: 15px; }
+    .billing-methods p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .billing-unavailable { margin-top: 18px; padding: 13px 15px; background: var(--blue-light); color: var(--ink); font-size: 13px; line-height: 1.55; }
+    .billing-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; padding: 20px; border: 1px solid var(--line); background: #fff; }
+    .billing-form label { margin: 0 0 6px; color: var(--ink); font-size: 13px; }
+    .billing-form select, .billing-form input { width: 100%; min-height: 43px; padding: 9px 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; }
+    .billing-form .field-error { grid-column: 1 / -1; margin: -8px 0 0; color: #b3261e; font-size: 12px; }
+    .billing-form button { grid-column: 1 / -1; min-height: 45px; border: 0; background: var(--primary-blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    .billing-form button[hidden] { display: none; }
+    .billing-safety { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .payment-feedback { grid-column: 1 / -1; margin: 0; padding: 12px 14px; background: var(--blue-light); color: var(--ink); font-size: 13px; line-height: 1.55; }
+    .billing-history { margin-top: 26px; }
+    .billing-history h2 { color: var(--ink); font-size: 17px; }
+    .billing-history li { padding: 9px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .billing-form .network-field { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
+    .billing-form .network-field legend { margin-bottom: 8px; color: var(--ink); font-size: 13px; font-weight: 700; }
+    .network-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .network-option { display: flex; min-height: 68px; align-items: center; gap: 12px; margin: 0 !important; padding: 10px 13px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+    .network-option:has(input:checked) { border-color: var(--primary-blue); background: var(--blue-light); box-shadow: inset 0 0 0 1px var(--primary-blue); }
+    .network-option input[type="radio"] { width: 18px; min-height: 18px; height: 18px; flex: 0 0 18px; margin: 0; accent-color: var(--primary-blue); }
+    .network-mark { display: grid; width: 68px; height: 38px; flex: 0 0 68px; place-items: center; font-size: 14px; font-weight: 900; }
+    .network-mark.airtel { border-radius: 20px; background: #ed1c24; color: #fff; }
+    .network-mark.mtn { background: #ffcc00; color: #202020; }
+    .network-name { color: var(--ink); font-size: 14px; font-weight: 700; }
+    .billing-faq { margin-top: 28px; border-top: 1px solid var(--line); }
+    .billing-faq h2 { margin: 18px 0 8px; color: var(--ink); font-size: 18px; }
+    .billing-faq details { border-bottom: 1px solid var(--line); }
+    .billing-faq summary { padding: 14px 2px; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
+    .billing-faq details p { margin: 0; padding: 0 2px 15px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    @media (max-width: 600px) { .billing-plans { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .billing-form { grid-template-columns: 1fr; padding: 15px; } .network-options { grid-template-columns: 1fr; } }
+</style>
+<section class="billing-page" aria-labelledby="billing-title">
+    <h1 id="billing-title">Plan &amp; billing</h1>
+    <p class="billing-lead">Your plan supports your nutrition tracking, food and recipe tools, and personalized progress.</p>
+    <section class="billing-status" aria-live="polite">
+        {% if paid_until and paid_until >= today %}
+            <strong>Your subscription is active through {{ paid_until|date:"F j, Y" }}</strong>
+            <p>Your paid access is active. Your free month originally ended on {{ trial_ends_on|date:"F j, Y" }}.</p>
+        {% elif trial_active %}
+            <strong>Your free month is active: {{ trial_days_remaining }} day{{ trial_days_remaining|pluralize }} remaining</strong>
+            <p>Your free access ends on {{ trial_ends_on|date:"F j, Y" }}. Your trial is calculated from your account creation date.</p>
+        {% else %}
+            <strong>Your free month ended on {{ trial_ends_on|date:"F j, Y" }}</strong>
+            <p>{% if trial_days_elapsed %}That was {{ trial_days_elapsed }} day{{ trial_days_elapsed|pluralize }} ago. {% endif %}{% if payment_ready %}Choose a plan below to continue your membership.{% else %}Payments are not configured yet, so your account access will not be interrupted.{% endif %}</p>
+        {% endif %}
+    </section>
+    <div class="billing-plans" aria-label="Subscription plans">
+        <article class="billing-plan">
+            <h2>Monthly</h2>
+            <p class="billing-price">UGX 30,000 <small>/ month</small></p>
+            <p>Continues access for one month after successful payment.</p>
+        </article>
+        <article class="billing-plan">
+            <h2>Six months</h2>
+            <p class="billing-price">UGX 150,000 <small>/ 6 months</small></p>
+            <p>Six months of access, equivalent to UGX 25,000 per month.</p>
+        </article>
+    </div>
+    <section class="billing-methods" aria-labelledby="payment-methods-title">
+        <h2 id="payment-methods-title">Mobile Money</h2>
+        <p>Choose your network and enter the number linked to your Mobile Money account.</p>
+    </section>
+    <form class="billing-form" method="post" action="{% url 'subscription' %}">
+        {% csrf_token %}
+        <div><label for="id_plan">Subscription plan</label>{{ payment_form.plan }}{{ payment_form.plan.errors }}</div>
+        <fieldset class="network-field">
+            <legend>Choose Mobile Money network</legend>
+            <div class="network-options">
+                {% for value, label in payment_form.network.field.choices %}
+                    <label class="network-option" for="id_network_{{ forloop.counter0 }}">
+                        <input type="radio" name="network" value="{{ value }}" id="id_network_{{ forloop.counter0 }}"{% if payment_form.network.value == value %} checked{% endif %} required>
+                        <span class="network-mark {% if value == 'AIRTEL' %}airtel{% else %}mtn{% endif %}" aria-hidden="true">{% if value == 'AIRTEL' %}airtel{% else %}MTN{% endif %}</span>
+                        <span class="network-name">{{ label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% for error in payment_form.network.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </fieldset>
+        <div><label for="id_phone_number">Mobile Money phone number</label>{{ payment_form.phone_number }}{{ payment_form.phone_number.errors }}</div>
+        {% if payment_form.non_field_errors %}<p class="field-error">{{ payment_form.non_field_errors }}</p>{% endif %}
+        <p class="billing-safety">{% if payment_ready %}After you tap Pay, check your phone for the Mobile Money approval request. Enter your PIN on your phone to approve it. Never enter your PIN on this website.{% else %}Mobile Money payments are not connected yet. Once enabled, you’ll receive an approval request on your phone and enter your PIN there. Never enter your PIN on this website.{% endif %}</p>
+        <p class="payment-feedback" id="payment-feedback" role="status" hidden></p>
+        <button id="pay-button" type="submit" hidden>Pay</button>
+    </form>
+    {% if not payment_ready %}<p class="billing-unavailable" role="status">Mobile Money payment is not connected yet. The Pay button will tell you when a phone request can be sent. Do not enter your PIN unless you receive an approval request on your phone.</p>{% endif %}
+    <section class="billing-faq" aria-labelledby="billing-faq-title">
+        <h2 id="billing-faq-title">Frequently asked questions</h2>
+        <details><summary>What happens after I tap Pay?</summary><p>{% if payment_ready %}A payment request is sent to your selected Mobile Money number. Check your phone and follow the approval instructions there.{% else %}The Pay button currently explains that payments are not connected, and no request is sent. Once Mobile Money is enabled, a request will arrive on your phone for approval.{% endif %}</p></details>
+        <details><summary>Where do I enter my Mobile Money PIN?</summary><p>Enter your PIN only on your phone in the official Airtel Money or MTN authorization prompt. Never enter it on the Diet Services website or share it with anyone.</p></details>
+        <details><summary>When does my subscription become active?</summary><p>Your subscription becomes active after the payment is confirmed. If it is pending, check your phone for the approval request.</p></details>
+        <details><summary>What if I don’t receive a prompt?</summary><p>Check that the number belongs to the selected network and is reachable. Avoid retrying while a request is pending; contact support if no prompt arrives.</p></details>
+        <details><summary>Does Diet Services store my PIN?</summary><p>No. Your PIN is entered with the mobile operator’s approval flow and is never requested or stored by Diet Services.</p></details>
+    </section>
+    {% if recent_payments %}<section class="billing-history" aria-labelledby="payment-history-title"><h2 id="payment-history-title">Payment history</h2><ul>{% for payment in recent_payments %}<li>{{ payment.get_plan_display }} · UGX {{ payment.amount }} · {{ payment.get_status_display }} · {{ payment.created_at|date:"M j, Y" }}</li>{% endfor %}</ul></section>{% endif %}
+</section>
+<script>
+    const checkoutForm = document.querySelector(".billing-form");
+    const phoneInput = document.querySelector("#id_phone_number");
+    const payButton = document.querySelector("#pay-button");
+    const paymentFeedback = document.querySelector("#payment-feedback");
+    const normalizePhone = (value) => {
+        let digits = value.replace(/[\s()+-]/g, "");
+        if (digits.startsWith("0") && digits.length === 10) digits = `256${digits.slice(1)}`;
+        return digits;
+    };
+    const updatePayButton = () => {
+        payButton.hidden = !/^256[0-9]{9}$/.test(normalizePhone(phoneInput.value));
+    };
+    phoneInput.addEventListener("input", updatePayButton);
+    updatePayButton();
+
+    checkoutForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const network = document.querySelector('input[name="network"]:checked');
+        const phone = phoneInput.value;
+        if (!network || !/^256[0-9]{9}$/.test(normalizePhone(phone))) {
+            paymentFeedback.textContent = "Enter a valid Uganda Mobile Money number and select your network first.";
+            paymentFeedback.hidden = false;
+            return;
+        }
+        {% if not payment_ready %}
+        paymentFeedback.textContent = "Mobile Money is not connected yet, so no request was sent. You will only need to enter your PIN on your phone after Airtel or MTN sends an approval request.";
+        paymentFeedback.hidden = false;
+        return;
+        {% endif %}
+        const networkName = network.value === "AIRTEL" ? "Airtel Money" : "MTN Mobile Money";
+        const plan = document.querySelector("#id_plan").selectedOptions[0].text;
+        if (window.confirm(`Confirm ${plan} payment with ${networkName} to ${phone}? After you continue, check your phone and enter your PIN there to approve.`)) checkoutForm.submit();
+    });
+</script>
+{% endblock %}

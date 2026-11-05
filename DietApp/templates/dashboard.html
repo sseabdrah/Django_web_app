@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard - Diet Services{% endblock %}
+{% block body_class %}dashboard-page{% endblock %}
+{% block page_navigation %}{% endblock %}
+{% block page_styles %}
+    <style>
+        .dashboard-page { --dash-ink: #203343; --dash-muted: #5d7180; --dash-blue: #1877f2; --dash-sky: #4595ff; --dash-accent: #d28a26; --dash-light: #eaf3ff; --dash-border: #d3e2f5; display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; background: linear-gradient(rgba(247, 250, 255, .92), rgba(247, 250, 255, .92)), #eaf3ff url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1800&q=85") center / cover fixed; color: var(--dash-ink); font-family: "Aptos", "Segoe UI", sans-serif; }
+        .dashboard-page a { color: inherit; }
+        .dashboard-page .dashboard-sidebar { position: sticky; top: 0; display: flex; height: 100vh; flex-direction: column; padding: 28px 17px 20px; background: var(--dash-blue); }
+        .dashboard-page .dashboard-brand { display: flex; min-height: 58px; align-items: center; gap: 11px; margin: 0 4px 36px; color: #fff; font-size: 21px; font-weight: 800; text-decoration: none; }
+        .dashboard-page .brand-mark { display: block; width: 54px; height: 54px; flex: 0 0 54px; padding: 3px; border-radius: 12px; background: #fff; object-fit: contain; }
+        .dashboard-page .sidebar-label { margin: 0 4px 12px; color: #ffffffc9; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .dashboard-page .dashboard-nav { display: grid; gap: 7px; }
+        .dashboard-page .dashboard-nav a { display: flex; min-height: 43px; align-items: center; gap: 11px; padding: 0 12px; border-radius: 14px; color: #fff; font-size: 14px; font-weight: 650; text-decoration: none; transition: background-color .16s ease, transform .16s ease; }
+        .dashboard-page .dashboard-nav a:hover, .dashboard-page .dashboard-nav a[aria-current="page"] { transform: translateX(2px); background: #ffffff30; }
+        .dashboard-page .nav-mark { display: grid; width: 25px; height: 25px; flex: 0 0 25px; place-items: center; border-radius: 9px; background: #ffffff25; color: #fff; font-size: 12px; font-weight: 800; }
+        .dashboard-page .sidebar-rule { height: 1px; margin: 20px 5px; background: #ffffff50; }
+        .dashboard-page .sidebar-user { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 12px 8px 2px; }
+        .dashboard-page .user-avatar { display: grid; width: 39px; height: 39px; flex: 0 0 39px; place-items: center; border: 2px solid #ffffffb0; border-radius: 13px; background: var(--dash-light); color: var(--dash-blue); font-size: 13px; font-weight: 800; }
+        .dashboard-page .user-meta { min-width: 0; }
+        .dashboard-page .user-meta strong, .dashboard-page .user-meta span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dashboard-page .user-meta strong { font-size: 13px; }
+        .dashboard-page .user-meta span { margin-top: 2px; color: #ffffffc9; font-size: 12px; }
+        .dashboard-page .user-meta .user-role { color: #f5efdc; font-size: 11px; font-weight: 800; }
+        .dashboard-page main { width: auto; min-width: 0; margin: 0; padding: 30px clamp(20px, 3.2vw, 48px) 48px; background: transparent; }
+        .dashboard-page .message { border-radius: 12px; box-shadow: 0 4px 16px #28375a0b; }
+        .dashboard-page .dashboard-topline { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+        .dashboard-page .dashboard-actions { display: flex; align-items: center; gap: 10px; }
+        .dashboard-page .admin-support-link { display: inline-flex; min-height: 40px; align-items: center; padding: 0 14px; border: 1px solid var(--dash-blue); background: #fff; color: var(--dash-blue) !important; font-size: 13px; font-weight: 750; text-decoration: none; }
+        .dashboard-page .dashboard-logout { margin: 0; }
+        .dashboard-page .dashboard-logout button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--dash-blue); color: #fff; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; transition: background-color .15s ease, transform .15s ease; }
+        .dashboard-page .dashboard-logout button:hover { transform: translateY(-1px); background: #1464d8; }
+        .dashboard-page .dashboard-logout button:focus-visible { outline: 3px solid var(--dash-sky); outline-offset: 3px; }
+        .dashboard-page h1 { margin: 0; color: var(--dash-blue); font-family: "Aptos", "Segoe UI", sans-serif; font-size: clamp(25px, 3vw, 31px); font-weight: 800; }
+        .dashboard-page .intro { margin: 5px 0 0; color: var(--dash-muted); font-size: 14px; }
+        .dashboard-page .date-chip { display: inline-flex; min-height: 38px; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid var(--dash-border); border-radius: 20px; background: #fff; color: var(--dash-blue); font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .dashboard-page .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+        .dashboard-page .section-heading h2 { margin: 0; color: var(--dash-blue); font: 750 20px "Aptos", "Segoe UI", sans-serif; }
+        .dashboard-page .section-heading p { margin: 0; color: var(--dash-muted); font-size: 12px; }
+        .dashboard-page .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .dashboard-page .module-card { position: relative; min-height: 150px; overflow: hidden; padding: 19px; border: 1px solid var(--dash-border); border-radius: 13px; background: #fff; box-shadow: 0 5px 17px #2e7d3210; transition: transform .17s ease, box-shadow .17s ease; }
+        .dashboard-page .module-card::after { position: absolute; right: -21px; bottom: -34px; width: 92px; height: 92px; border-radius: 50%; background: var(--dash-accent); content: ""; opacity: .12; }
+        .dashboard-page .module-card:hover { transform: translateY(-3px); border-color: var(--dash-sky); box-shadow: 0 10px 24px #1877f218; }
+        .dashboard-page .module-card h2 { position: relative; z-index: 1; margin: 14px 0 7px; color: var(--dash-blue); font: 750 16px "Aptos", "Segoe UI", sans-serif; }
+        .dashboard-page .module-card p { position: relative; z-index: 1; max-width: 28ch; margin: 0; color: var(--dash-muted); font-size: 13px; line-height: 1.5; }
+        .dashboard-page .module-icon { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 12px; background: var(--dash-light); color: var(--dash-blue); font-size: 13px; font-weight: 800; }
+        .dashboard-page .daily-summary { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(130px, 1fr)); gap: 14px; margin: 0 0 28px; }
+        .dashboard-page .summary-block { min-width: 0; padding: 18px; border: 1px solid var(--dash-border); background: #fff; }
+        .dashboard-page .summary-label { margin: 0 0 7px; color: var(--dash-muted); font-size: 12px; font-weight: 700; }
+        .dashboard-page .summary-value { margin: 0; color: var(--dash-blue); font-size: 27px; font-weight: 800; }
+        .dashboard-page .summary-value small { color: var(--dash-muted); font-size: 13px; font-weight: 600; }
+        .dashboard-page .summary-track { height: 7px; margin-top: 12px; overflow: hidden; background: var(--dash-light); }
+        .dashboard-page .summary-track span { display: block; height: 100%; background: var(--dash-accent); }
+        .dashboard-page .macro-line { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 13px; color: var(--dash-muted); font-size: 12px; }
+        .dashboard-page .macro-line strong { color: var(--dash-ink); }
+        .dashboard-page .daily-summary { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(120px, 1fr)); }
+        .dashboard-page .streak-symbol { display: grid; width: 36px; height: 36px; place-items: center; margin-bottom: 8px; border-radius: 50%; background: #fff0dc; font-size: 20px; }
+        .dashboard-page .streak-value { margin: 0; color: var(--dash-blue); font-size: 26px; font-weight: 800; }
+        .dashboard-page .setup-link { display: inline-flex; min-height: 36px; align-items: center; margin-top: 12px; padding: 0 12px; border: 1px solid var(--dash-blue); color: var(--dash-blue); font-size: 12px; font-weight: 750; text-decoration: none; }
+        .dashboard-page .meal-section { margin: 0 0 28px; }
+        .dashboard-page .meal-list { overflow: hidden; border: 1px solid var(--dash-border); background: #fff; }
+        .dashboard-page .meal-row { display: flex; min-height: 64px; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 17px; border-bottom: 1px solid var(--dash-border); }
+        .dashboard-page .meal-row:last-child { border-bottom: 0; }
+        .dashboard-page .meal-row p { margin: 0; }
+        .dashboard-page .meal-name { color: var(--dash-ink); font-size: 14px; font-weight: 750; }
+        .dashboard-page .meal-meta { margin-top: 4px !important; color: var(--dash-muted); font-size: 12px; }
+        .dashboard-page .meal-calories { color: var(--dash-blue); font-size: 13px; font-weight: 750; white-space: nowrap; }
+        .dashboard-page .bottom-nav { display: none; }
+        @media (max-width: 900px) { .dashboard-page { grid-template-columns: 210px minmax(0, 1fr); } .dashboard-page .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 620px) { .dashboard-page { display: block; } .dashboard-page .dashboard-sidebar { position: static; height: auto; padding: 16px; } .dashboard-page .dashboard-brand { margin: 0 4px 15px; } .dashboard-page .sidebar-label, .dashboard-page .sidebar-rule, .dashboard-page .sidebar-user { display: none; } .dashboard-page .dashboard-nav { display: none; } .dashboard-page main { padding: 24px 17px 100px; } .dashboard-page .dashboard-topline { align-items: flex-start; } .dashboard-page .dashboard-actions { flex-direction: column-reverse; align-items: flex-end; } .dashboard-page .date-chip { display: none; } .dashboard-page .module-grid { grid-template-columns: 1fr; } .dashboard-page .daily-summary { grid-template-columns: 1fr 1fr; } .dashboard-page .summary-block:first-child { grid-column: 1 / -1; } .dashboard-page .module-card { min-height: 132px; } .dashboard-page .bottom-nav { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--dash-border); background: #fff; box-shadow: 0 -5px 18px #1b1b1b10; } .dashboard-page .bottom-nav a { display: grid; min-height: 48px; align-content: center; justify-items: center; gap: 3px; color: var(--dash-blue); font-size: 9px; font-weight: 700; text-decoration: none; } .dashboard-page .bottom-nav a[aria-current="page"] { color: var(--dash-blue); } .dashboard-page .bottom-nav-mark { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 9px; background: var(--dash-light); color: var(--dash-blue); font-size: 13px; } }
+        @media (prefers-reduced-motion: reduce) { .dashboard-page *, .dashboard-page *::before, .dashboard-page *::after { transition-duration: .01ms !important; } }
+    </style>
+{% endblock %}
+{% block site_header %}
+    <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
+        <a class="dashboard-brand" href="{% url 'dashboard' %}"><img class="brand-mark" src="{% static 'DietApp/images/diet-services-logo.png' %}" alt=""><span>Diet Services</span></a>
+        <p class="sidebar-label">Menu</p>
+        <nav class="dashboard-nav" aria-label="Main navigation">
+            <a href="{% url 'dashboard' %}" aria-current="page"><span class="nav-mark" aria-hidden="true">D</span>Dashboard</a>
+            {% for module in modules %}
+                <a href="{{ module.url }}">
+                    <span class="nav-mark" aria-hidden="true">{{ module.title|slice:":1" }}</span>{{ module.title }}
+                </a>
+            {% endfor %}
+            <a href="{% url 'food_search' %}"><span class="nav-mark" aria-hidden="true">S</span>Explore food &amp; recipes</a>
+            <a href="{% url 'meal_plan' %}"><span class="nav-mark" aria-hidden="true">P</span>Meal plan</a>
+            <a href="{% url 'progress' %}"><span class="nav-mark" aria-hidden="true">T</span>Progress</a>
+            <a href="{% url 'support' %}"><span class="nav-mark" aria-hidden="true">?</span>Help &amp; support</a>
+        </nav>
+        <div class="sidebar-rule"></div>
+        <p class="sidebar-label">Account</p>
+        <div class="sidebar-user">
+            <span class="user-avatar" aria-hidden="true">{{ user.full_name|slice:":1" }}</span>
+            <div class="user-meta"><strong>{{ user.full_name }}</strong><span class="user-role">{% if request.user.is_staff %}Administrator{% else %}Nutrition member{% endif %}</span></div>
+        </div>
+    </aside>
+{% endblock %}
+{% block content %}
+    <header class="dashboard-topline">
+        <div>
+            <h1>Welcome, {{ user.full_name }}!</h1>
+            {% if request.user.is_staff %}<p class="intro">Administrator account</p>{% endif %}
+            <p class="intro">What would you like to visit?</p>
+            {% if profile_setup_required %}<a class="setup-link" href="{% url 'getting_started' %}">Complete your setup</a>{% endif %}
+        </div>
+        <div class="dashboard-actions">
+            <span class="date-chip"><span aria-hidden="true">◷</span> {{ daily_summary.date|date:"l, F j" }}</span>
+            <a class="admin-support-link" href="{% url 'subscription' %}">Plan &amp; billing</a>
+            {% if request.user.is_staff %}<a class="admin-support-link" href="{% url 'admin:DietApp_supportquestion_changelist' %}">Diet Administration: Support questions</a>{% endif %}
+            <form class="dashboard-logout" method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+        </div>
+    </header>
+    {% if answered_support_questions %}
+        <section class="meal-section" aria-labelledby="support-answers-title" role="status">
+            <div class="section-heading">
+                <h2 id="support-answers-title">Support answered your question</h2>
+                <a href="{% url 'diet_ai' %}">Open Diet AI</a>
+            </div>
+            <div class="meal-list">
+                {% for item in answered_support_questions %}
+                    <article class="meal-row">
+                        <div>
+                            <p class="meal-name">{{ item.question }}</p>
+                            <p class="meal-meta">{{ item.answer }}</p>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+    <section class="daily-summary" aria-label="Today's nutrition summary">
+        <div class="summary-block">
+            <p class="summary-label">Calories today</p>
+            <p class="summary-value">{{ daily_summary.calories }} <small>{% if daily_summary.targets.calories %} / {{ daily_summary.targets.calories }} kcal{% else %}kcal{% endif %}</small></p>
+            {% if daily_summary.targets.calories %}<div class="summary-track" role="progressbar" aria-label="Calorie target progress" aria-valuenow="{{ daily_summary.calories_progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ daily_summary.calories_progress }}%"></span></div>{% endif %}
+            <div class="macro-line"><span>Protein <strong>{{ daily_summary.protein|floatformat:0 }}g</strong></span><span>Carbs <strong>{{ daily_summary.carbs|floatformat:0 }}g</strong></span><span>Fat <strong>{{ daily_summary.fat|floatformat:0 }}g</strong></span></div>
+        </div>
+        <div class="summary-block">
+            <p class="summary-label">Water today</p>
+            <p class="summary-value">{{ daily_summary.water_ml }} <small>ml</small></p>
+            {% if daily_summary.targets.water %}<div class="summary-track" role="progressbar" aria-label="Water target progress" aria-valuenow="{{ daily_summary.water_progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ daily_summary.water_progress }}%"></span></div><p class="summary-label">of {{ daily_summary.targets.water }} ml target</p>{% endif %}
+        </div>
+        <a class="summary-block" href="{% url 'progress' %}" style="text-decoration: none;">
+            <p class="summary-label">Progress</p>
+            <p class="summary-value">View trends <small aria-hidden="true">&rarr;</small></p>
+            <p class="summary-label">Weight and intake history</p>
+        </a>
+        <a class="summary-block" href="{% url 'achievements' %}" style="text-decoration: none;">
+            <span class="streak-symbol" aria-hidden="true">🔥</span>
+            <p class="summary-label">Current streak</p>
+            <p class="streak-value">{{ streak.current }} <small>days</small></p>
+            <p class="summary-label">Best: {{ streak.best }} days</p>
+        </a>
+    </section>
+    <section class="meal-section" aria-labelledby="today-meals-title">
+        <div class="section-heading">
+            <h2 id="today-meals-title">Today's Meals</h2>
+            <a href="{% url 'food_log' %}">View log</a>
+        </div>
+        <div class="meal-list">
+            {% for meal in today_meals %}
+                <article class="meal-row">
+                    <div>
+                        <p class="meal-name">{{ meal.food_id.name }}</p>
+                        <p class="meal-meta">{{ meal.get_meal_type_display }} · {{ meal.log_time|time:"g:i A" }}</p>
+                    </div>
+                    <p class="meal-calories">{{ meal.calories_consumed|floatformat:0 }} kcal</p>
+                </article>
+            {% empty %}
+                <article class="meal-row"><p class="meal-meta">No meals logged yet today.</p><a href="{% url 'food_search' %}">Log a meal</a></article>
+            {% endfor %}
+        </div>
+    </section>
+    <section aria-labelledby="workspace-title">
+        <div class="section-heading">
+            <h2 id="workspace-title">Your Workspace</h2>
+            <p>Choose a section to continue</p>
+        </div>
+    <section class="module-grid" aria-label="Diet app modules">
+        {% for module in modules %}
+            <a class="module-card" href="{{ module.url }}">
+                <span class="module-icon" aria-hidden="true">{{ module.title|slice:":1" }}</span>
+                <h2>{{ module.title }}</h2>
+                <p>{{ module.description }}</p>
+            </a>
+        {% endfor %}
+    </section>
+    </section>
+    <nav class="bottom-nav" aria-label="App navigation">
+        <a href="{% url 'dashboard' %}" aria-current="page"><span class="bottom-nav-mark" aria-hidden="true">⌂</span>Home</a>
+        <a href="{% url 'food_search' %}"><span class="bottom-nav-mark" aria-hidden="true">＋</span>Log food</a>
+        <a href="{% url 'meal_plan' %}"><span class="bottom-nav-mark" aria-hidden="true">▦</span>Plan</a>
+        <a href="{% url 'progress' %}"><span class="bottom-nav-mark" aria-hidden="true">↗</span>Progress</a>
+        <a href="{% url 'profile' %}"><span class="bottom-nav-mark" aria-hidden="true">●</span>Profile</a>
+        <a href="{% url 'support' %}"><span class="bottom-nav-mark" aria-hidden="true">?</span>Help</a>
+    </nav>
+{% endblock %}

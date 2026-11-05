@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Achievements - Diet Services{% endblock %}
+{% block page_styles %}
+    <style>
+        .achievement-heading { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:22px; }
+        .achievement-heading h1 { margin-bottom:6px; }
+        .streak-feature { display:grid; grid-template-columns:minmax(170px,.8fr) minmax(0,2fr); align-items:center; gap:28px; margin-bottom:24px; padding:24px; border-left:5px solid #d28a26; background:#fff7e8; }
+        .streak-count { display:flex; align-items:center; gap:14px; }
+        .streak-flame { display:grid; width:64px; height:64px; flex:0 0 64px; place-items:center; border:1px solid #eccb91; border-radius:50%; background:#fff; font-size:32px; }
+        .streak-count strong { display:block; color:#9b6418; font-size:32px; line-height:1.1; }
+        .streak-count span { display:block; margin-top:5px; color:#6c5a3d; font-size:13px; }
+        .streak-stats { display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:12px; color:#6c5a3d; font-size:13px; }
+        .streak-stats strong { color:#33313a; }
+        .activity-heatmap { display:grid; grid-template-columns:repeat(7,minmax(18px,1fr)); gap:5px; max-width:360px; }
+        .activity-day { width:100%; aspect-ratio:1; border:1px solid #d3e2f5; background:#fff; }
+        .activity-day.is-active { border-color:#1877f2; background:#4595ff; }
+        .activity-caption { margin:0 0 9px; color:#5d7180; font-size:12px; font-weight:700; }
+        .badge-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:28px 0 14px; }
+        .badge-heading h2 { margin:0; }
+        .badge-count { color:var(--muted); font-size:13px; }
+        .badge-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+        .badge-item { min-width:0; padding:17px; border:1px solid var(--line); background:#fff; }
+        .badge-item.is-earned { border-color:#eccb91; background:linear-gradient(145deg,#fff,#fff7e8); }
+        .badge-top { display:flex; align-items:flex-start; gap:12px; }
+        .badge-icon { display:grid; width:48px; height:48px; flex:0 0 48px; place-items:center; border:1px solid #d3e2f5; border-radius:50%; background:#f7faff; font-size:25px; filter:grayscale(1); }
+        .is-earned .badge-icon { border-color:#eccb91; background:#fff0cf; filter:none; }
+        .badge-copy { min-width:0; }
+        .badge-copy h3 { margin:2px 0 5px; color:#203343; font-size:15px; }
+        .badge-copy p { margin:0; color:var(--muted); font-size:12px; line-height:1.45; }
+        .badge-status { margin:13px 0 7px; color:#5d7180; font-size:12px; font-weight:700; }
+        .badge-track { height:6px; overflow:hidden; background:#eaf3ff; }
+        .badge-track span { display:block; height:100%; background:#9bc4ff; }
+        .is-earned .badge-track span { background:#d28a26; }
+        .badge-earned-date { margin:9px 0 0; color:#9b6418; font-size:11px; }
+        @media(max-width:850px) { .badge-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:620px) { .streak-feature { grid-template-columns:1fr; gap:20px; padding:19px; } .badge-grid { grid-template-columns:1fr; } .achievement-heading { align-items:flex-start; flex-direction:column; } }
+    </style>
+{% endblock %}
+{% block content %}
+    <header class="achievement-heading">
+        <div><h1>Achievements</h1><p class="intro">Milestones, activity streaks, and your recent consistency.</p></div>
+    </header>
+    <section class="streak-feature" aria-labelledby="streak-title">
+        <div>
+            <div class="streak-count"><span class="streak-flame" aria-hidden="true">🔥</span><div><strong>{{ streak.current }}</strong><span id="streak-title">day{% if streak.current != 1 %}s{% endif %} current streak</span></div></div>
+            <div class="streak-stats"><span>Best streak <strong>{{ streak.best }} days</strong></span><span>Activity in the last 28 days</span></div>
+        </div>
+        <div>
+            <p class="activity-caption">Log food, water, or weight to keep the chain active</p>
+            <div class="activity-heatmap" role="img" aria-label="Activity history for the last 28 days">
+                {% for day in streak.calendar %}<span class="activity-day{% if day.active %} is-active{% endif %}" title="{{ day.date|date:'M j' }}{% if day.active %}: activity logged{% else %}: no activity{% endif %}" aria-hidden="true"></span>{% endfor %}
+            </div>
+        </div>
+    </section>
+    <div class="badge-heading"><h2>Your badges</h2><span class="badge-count">{{ badges|length }} available</span></div>
+    {% if badges %}
+        <section class="badge-grid" aria-label="Achievement badges">
+            {% for badge in badges %}
+                <article class="badge-item{% if badge.completed %} is-earned{% endif %}">
+                    <div class="badge-top"><span class="badge-icon" aria-hidden="true">{{ badge.icon }}</span><div class="badge-copy"><h3>{{ badge.name }}</h3><p>{{ badge.description }}</p></div></div>
+                    {% if badge.completed %}<p class="badge-status">Earned</p>{% else %}<p class="badge-status">Progress {{ badge.progress }} / {{ badge.target }}</p>{% endif %}
+                    <div class="badge-track" role="progressbar" aria-label="{{ badge.name }} progress" aria-valuenow="{{ badge.percentage }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ badge.percentage }}%"></span></div>
+                    {% if badge.earned_date %}<p class="badge-earned-date">Earned {{ badge.earned_date|date:'M j, Y' }}</p>{% endif %}
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="panel"><p class="empty">Achievement badges will appear here when they are added to the program.</p></section>
+    {% endif %}
+{% endblock %}

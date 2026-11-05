@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1877F2">
+    <title>{% block title %}Diet Services{% endblock %}</title>
+    {% block page_styles %}{% endblock %}
+    <style>
+        :root { --primary-blue: #1877f2; --sky-blue: #4595ff; --accent-amber: #d28a26; --blue-light: #eaf3ff; --paper: #f7faff; --ink: #203343; --muted: #5d7180; --line: #d3e2f5; --error: #b54747; }
+        * { box-sizing: border-box; }
+        body { min-height: 100vh; margin: 0; background: linear-gradient(rgba(247, 250, 255, .92), rgba(247, 250, 255, .92)), var(--blue-light) url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1800&q=85") center / cover fixed; color: var(--ink); font-family: "Aptos", "Segoe UI", sans-serif; }
+        a { color: var(--primary-blue); }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 14px clamp(20px, 6vw, 88px); background: var(--paper); color: var(--primary-blue); }
+        .brand { display: inline-flex; min-height: 52px; align-items: center; gap: 10px; color: var(--primary-blue); font: 700 24px "Aptos", "Segoe UI", sans-serif; text-decoration: none; white-space: nowrap; }
+        .brand-logo { display: block; width: 48px; height: 48px; flex: 0 0 48px; object-fit: contain; }
+        .topbar-right, .main-nav { display: flex; align-items: center; gap: 18px; }
+        .main-nav { flex-wrap: wrap; }
+        .main-nav a { display: inline-flex; align-items: center; gap: 7px; color: var(--primary-blue); font-size: 14px; font-weight: 700; text-decoration: none; }
+        .main-nav-mark { display: none; }
+        .main-nav a:hover { text-decoration: underline; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+        .ai-float { position: fixed; z-index: 20; left: 18px; bottom: 18px; display: grid; width: 48px; height: 48px; place-items: center; border: 0; border-radius: 50%; background: var(--accent-amber); color: #fff; box-shadow: 0 4px 14px #20334335; font-size: 20px; text-decoration: none; }
+        .ai-float:hover { background: #b9781e; }
+        .ai-float:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+        .logout-button { min-height: 38px; padding: 0 13px; border: 1px solid var(--primary-blue); border-radius: 20px; background: transparent; color: var(--primary-blue); font: inherit; cursor: pointer; }
+        main { width: min(1120px, 100%); margin: 42px auto; padding: 0 24px 48px; }
+        h1, h2 { color: var(--primary-blue); font-family: "Aptos", "Segoe UI", sans-serif; font-weight: 400; }
+        h1 { margin: 0 0 10px; font-size: 38px; }
+        h2 { margin: 0 0 12px; font-size: 24px; }
+        .intro { margin: 0 0 28px; color: var(--muted); line-height: 1.6; }
+        .message { margin: 0 0 16px; padding: 12px 15px; border-left: 4px solid var(--accent-amber); background: var(--paper); }
+        .message.error { border-color: var(--error); }
+        .action-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 26px; }
+        .page-navigation { margin: 0 0 20px; }
+        .back-icon { display: inline-grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); color: var(--primary-blue); font-size: 25px; line-height: 1; text-decoration: none; }
+        .back-icon:hover { border-color: var(--primary-blue); background: var(--blue-light); }
+        .back-icon:focus-visible { outline: 3px solid #4595ff80; outline-offset: 3px; }
+        .action { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; padding: 0 15px; border: 1px solid var(--primary-blue); border-radius: 2px; background: var(--primary-blue); color: white; font-weight: 700; text-decoration: none; }
+        .action.secondary { background: transparent; color: var(--primary-blue); }
+        .panel { margin: 0 0 20px; padding: 22px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); box-shadow: 0 8px 24px #245d2910; }
+        .empty { margin: 0; color: var(--muted); }
+        .record-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 0 24px; margin: 0; }
+        .record-list div { padding: 11px 0; border-bottom: 1px solid var(--line); }
+        .record-list dt { color: var(--muted); font-size: 13px; }
+        .record-list dd { margin: 4px 0 0; overflow-wrap: anywhere; font-weight: 700; }
+        .record-list .profile-image-preview { display: block; width: 112px; height: 112px; margin-top: 9px; border: 3px solid var(--paper); border-radius: 50%; box-shadow: 0 3px 12px #245d2924; object-fit: cover; }
+        .module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .module-card { min-height: 132px; display: block; padding: 20px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); text-decoration: none; transition: transform .15s ease, border-color .15s ease; }
+        .module-card:hover { transform: translateY(-2px); border-color: var(--accent-amber); }
+        .module-card h2 { margin-bottom: 8px; font: 700 19px "Aptos", "Segoe UI", sans-serif; }
+        .module-card p { margin: 0; color: var(--muted); line-height: 1.5; }
+        form p { margin: 0 0 19px; }
+        label { display: block; margin-bottom: 7px; color: #2d4d68; font-size: 14px; font-weight: 700; }
+        input, select, textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #c5d8f2; border-radius: 7px; background: #fcfefc; color: var(--ink); font: inherit; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+        input:hover, select:hover, textarea:hover { border-color: var(--sky-blue); background: #fff; }
+        textarea { min-height: 110px; resize: vertical; }
+        input[type="checkbox"], input[type="radio"] { width: 19px; min-height: 19px; height: 19px; margin: 0 7px 0 0; accent-color: var(--primary-blue); vertical-align: middle; }
+        input:focus, select:focus, textarea:focus { outline: 3px solid #4595ff40; border-color: var(--primary-blue); background: #fff; box-shadow: 0 0 0 1px var(--primary-blue); }
+        input[type="file"] { min-height: 46px; padding: 7px; }
+        input[type="file"]::file-selector-button { min-height: 30px; margin-right: 10px; padding: 0 10px; border: 0; border-radius: 5px; background: var(--blue-light); color: var(--primary-blue); font: inherit; font-weight: 700; cursor: pointer; }
+        main button[type="submit"], .action-row button.action { min-height: 43px; padding: 0 18px; border: 1px solid var(--primary-blue); border-radius: 7px; background: var(--primary-blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+        main button[type="submit"]:hover, .action-row button.action:hover { transform: translateY(-1px); background: #1464d8; box-shadow: 0 4px 10px #1877f228; }
+        main button[type="submit"]:focus-visible, .action-row button.action:focus-visible { outline: 3px solid #4595ff80; outline-offset: 3px; }
+        .errorlist { margin: 7px 0 0; padding: 8px 11px 8px 28px; border-radius: 6px; background: #fff3f1; color: var(--error); font-size: 13px; }
+        .helptext { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+        @media (max-width: 800px) { .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 560px) { .topbar { align-items: flex-start; flex-direction: row; gap: 12px; } .topbar-right { display: contents; } .main-nav { position: fixed; z-index: 6; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: #fff; box-shadow: 0 -5px 18px #1b1b1b10; } .main-nav a { min-width: 0; min-height: 48px; flex-direction: column; justify-content: center; gap: 3px; color: var(--muted); font-size: 9px; } .main-nav a[aria-current="page"] { color: var(--primary-blue); } .main-nav-mark { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 9px; background: var(--blue-light); color: var(--primary-blue); font-size: 13px; } main { margin-top: 30px; padding: 0 18px 100px; } h1 { font-size: 32px; } .module-grid { grid-template-columns: 1fr; } .panel { padding: 17px; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+    </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% block site_header %}
+    <header class="topbar">
+        <a class="brand" href="{% url 'dashboard' %}"><img class="brand-logo" src="{% static 'DietApp/images/diet-services-logo.png' %}" alt="">Diet Services</a>
+        <div class="topbar-right">
+            <nav class="main-nav" aria-label="Account navigation">
+                <a href="{% url 'dashboard' %}"{% if request.resolver_match.url_name == 'dashboard' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">⌂</span>Home</a>
+                <a href="{% url 'food_search' %}"{% if request.resolver_match.url_name == 'food_search' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">＋</span>Log food</a>
+                <a href="{% url 'meal_plan' %}"{% if request.resolver_match.url_name == 'meal_plan' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">▦</span>Plan</a>
+                <a href="{% url 'progress' %}"{% if request.resolver_match.url_name == 'progress' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">↗</span>Progress</a>
+                <a href="{% url 'profile' %}"{% if request.resolver_match.url_name == 'profile' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">●</span>Profile</a>
+                <a href="{% url 'subscription' %}"{% if request.resolver_match.url_name == 'subscription' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">B</span>Plan &amp; billing</a>
+                <a href="{% url 'support' %}"{% if request.resolver_match.url_name == 'support' %} aria-current="page"{% endif %}><span class="main-nav-mark" aria-hidden="true">?</span>Help &amp; Support</a>
+            </nav>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="logout-button" type="submit">Log out</button></form>
+        </div>
+    </header>
+    {% endblock %}
+    <main>
+        {% block page_navigation %}
+        <div class="page-navigation"><a class="back-icon" href="{{ previous_page_url }}" aria-label="Go to previous page" title="Previous page" onclick="if (window.history.length > 1) { window.history.back(); return false; }">&#8592;</a></div>
+        {% endblock %}
+        {% for message in messages %}<div class="message {{ message.tags }}" role="status">{{ message }}</div>{% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+    <a class="ai-float" href="{% url 'diet_ai' %}" aria-label="Ask Diet AI" title="Ask Diet AI">✦</a>
+</body>
+</html>

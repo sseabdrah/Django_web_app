@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Diet Services{% endblock %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    <p class="intro">{{ intro }}</p>
+    <div class="action-row">
+        <a class="action secondary" href="{% url 'dashboard' %}">Back to Dashboard</a>
+        {% if title == "Food Log" %}<a class="action secondary" href="{% url 'food_search' %}">Explore foods &amp; recipes</a><a class="action secondary" href="{% url 'meal_plan' %}">View meal plan</a>{% endif %}
+        {% for action in actions %}<a class="action" href="{{ action.url }}">{{ action.label }}</a>{% endfor %}
+    </div>
+    {% for group in groups %}
+        <section class="panel" aria-labelledby="group-{{ forloop.counter }}">
+            <h2 id="group-{{ forloop.counter }}">{{ group.title }}</h2>
+            {% if group.records %}
+                {% for record in group.records %}
+                    <dl class="record-list">
+                        {% for detail in record.details %}
+                            <div>
+                                <dt>{{ detail.label }}</dt>
+                                <dd>
+                                    {% if detail.label == "Profile Image" and detail.value %}
+                                        <img class="profile-image-preview" src="{{ detail.value.url }}" alt="Profile image for {{ user.full_name }}">
+                                    {% else %}
+                                        {{ detail.value }}
+                                    {% endif %}
+                                </dd>
+                            </div>
+                        {% endfor %}
+                    </dl>
+                    {% if record.edit_url %}<a class="action secondary" href="{{ record.edit_url }}">Edit</a>{% endif %}
+                    {% if record.delete_url %}<form method="post" action="{{ record.delete_url }}" style="display: inline;" onsubmit="return confirm('Remove this food from your foods?');">{% csrf_token %}<button class="action secondary" type="submit">Delete</button></form>{% endif %}
+                {% endfor %}
+            {% else %}
+                <p class="empty">No information has been added yet.</p>
+            {% endif %}
+        </section>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Overview · Diet Services{% endblock %}
+{% block page_title %}Platform overview{% endblock %}
+{% block content %}
+<p class="admin-intro">A live view of members, nutrition content, plans, and support activity.</p>
+<section class="admin-stats" aria-label="Platform statistics">
+    {% for stat in stats %}<a class="admin-stat" href="{{ stat.url }}"><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong></a>{% endfor %}
+</section>
+<div class="admin-grid">
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>Recent registrations</h2><a href="{% url 'admin_users' %}">All users</a></header>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>User</th><th>Email</th><th>Registered</th><th>State</th></tr></thead><tbody>
+            {% for member in recent_users %}<tr><td><a href="{% url 'admin_user_detail' member.pk %}">{{ member.full_name }}</a></td><td>{{ member.email }}</td><td>{{ member.created_at|date:"M j, Y" }}</td><td>{% if member.is_active %}Active{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td colspan="4" class="admin-empty">No member accounts yet.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>Recent payments</h2><a href="{% url 'admin_payments' %}">Payment history{% if unseen_payment_count %} · {{ unseen_payment_count }} new{% endif %}</a></header>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Amount</th><th>Paid</th></tr></thead><tbody>
+            {% for payment in recent_payments %}<tr><td>{{ payment.user.full_name }}<br><span>{{ payment.user.email }}</span></td><td>{{ payment.get_plan_display }} · {{ payment.get_network_display }}</td><td>{{ payment.currency }} {{ payment.amount }}</td><td>{{ payment.paid_at|date:"M j, Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4" class="admin-empty">No successful payments yet.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>User registrations</h2><a href="{% url 'admin_reports' %}">Reports</a></header>
+        <div class="admin-panel-body"><div class="admin-bars" aria-label="Registrations by month">
+            {% for month in month_counts %}<div class="admin-bar-item"><div class="admin-bar-track" title="{{ month.count }} registrations"><div class="admin-bar" style="height: {% if month.height %}{{ month.height }}{% else %}2{% endif %}%"></div></div><span>{{ month.label }}</span><strong>{{ month.count }}</strong></div>{% endfor %}
+        </div></div>
+    </section>
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>Recent support questions</h2><a href="{% url 'admin_support' %}">Support queue</a></header>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Question</th><th>From</th><th>Status</th></tr></thead><tbody>
+            {% for item in recent_questions %}<tr><td><a href="{% url 'admin_support_answer' item.pk %}">{{ item.question|truncatechars:68 }}</a></td><td>{% if item.user %}{{ item.user.full_name }}{% else %}Deleted account{% endif %}</td><td>{% if item.answer %}Answered{% else %}Awaiting answer{% endif %}</td></tr>{% empty %}<tr><td colspan="3" class="admin-empty">No support questions have been submitted.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>Recently added foods</h2><a href="{% url 'admin_catalog' 'foods' %}">Manage foods</a></header>
+        <div class="admin-panel-body">{% for food in recent_foods %}<div class="admin-actions" style="justify-content:space-between;margin:0;padding:8px 0;border-bottom:1px solid var(--admin-line)"><strong>{{ food.name }}</strong><span style="color:var(--admin-muted);font-size:12px">{{ food.calories }} kcal · {{ food.serving_size }} {{ food.serving_unit }}</span></div>{% empty %}<p class="admin-empty">No foods in the catalogue yet.</p>{% endfor %}</div>
+    </section>
+    <section class="admin-panel">
+        <header class="admin-panel-heading"><h2>Recently added recipes</h2><a href="{% url 'admin_catalog' 'recipes' %}">Manage recipes</a></header>
+        <div class="admin-panel-body">{% for recipe in recent_recipes %}<div class="admin-actions" style="justify-content:space-between;margin:0;padding:8px 0;border-bottom:1px solid var(--admin-line)"><strong>{{ recipe.name }}</strong><span style="color:var(--admin-muted);font-size:12px">{{ recipe.calories_per_serving }} kcal · {{ recipe.servings }} servings</span></div>{% empty %}<p class="admin-empty">No recipes have been added yet.</p>{% endfor %}</div>
+    </section>
+</div>
+{% endblock %}

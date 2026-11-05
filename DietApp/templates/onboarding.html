@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Welcome · Diet Services{% endblock %}
+{% block body_class %}onboarding-page{% endblock %}
+{% block page_navigation %}{% endblock %}
+{% block page_styles %}
+    <style>
+        body.onboarding-page { background: linear-gradient(135deg, #f7faff 0%, #eaf3ff 62%, #fff8eb 100%); }
+        .onboarding-page main { width: min(1240px, 100%); margin: clamp(24px, 5vh, 58px) auto; padding: 0 clamp(16px, 5vw, 64px) 48px; }
+        .welcome-layout { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: center; gap: clamp(36px, 7vw, 92px); min-height: 520px; }
+        .welcome-copy { position: relative; z-index: 1; animation: welcome-rise .7s both; }
+        .welcome-kicker { display: inline-flex; align-items: center; gap: 9px; margin: 0 0 18px; color: #1877f2; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .welcome-kicker::before { width: 24px; height: 2px; background: #d28a26; content: ""; }
+        .welcome-copy h1 { max-width: 11ch; margin: 0; color: #203343; font-size: clamp(38px, 5vw, 62px); font-weight: 700; line-height: 1.04; }
+        .welcome-copy h1 span { color: #1877f2; }
+        .welcome-copy > p { max-width: 48ch; margin: 20px 0 0; color: #5d7180; font-size: 16px; line-height: 1.7; }
+        .welcome-steps { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 26px 0 30px; padding: 0; list-style: none; }
+        .welcome-steps li { display: flex; align-items: center; gap: 8px; color: #203343; font-size: 13px; font-weight: 700; }
+        .welcome-steps li span { display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid #d3e2f5; border-radius: 50%; background: #fff; color: #1877f2; font-size: 11px; }
+        .welcome-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+        .welcome-actions form { margin: 0; }
+        .welcome-actions button { min-height: 46px; padding: 0 18px; border: 1px solid #1877f2; background: #1877f2; color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+        .welcome-actions button:hover { transform: translateY(-2px); background: #1464d8; box-shadow: 0 8px 18px #1877f22b; }
+        .welcome-actions .welcome-secondary { border-color: #d3e2f5; background: #fff; color: #203343; }
+        .welcome-actions .welcome-secondary:hover { background: #f7faff; }
+        .welcome-actions button:focus-visible { outline: 3px solid #4595ff80; outline-offset: 3px; }
+        .welcome-gallery { position: relative; display: grid; min-height: 430px; grid-template-columns: 1.2fr .8fr; grid-template-rows: 1fr .78fr; gap: 14px; }
+        .welcome-photo { min-width: 0; min-height: 0; margin: 0; overflow: hidden; background: #dcebdc; animation: photo-arrive .7s both; }
+        .welcome-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+        .welcome-photo:hover img { transform: scale(1.045); }
+        .welcome-photo-main { grid-row: 1 / 3; }
+        .welcome-photo-main img { animation-delay: .12s; }
+        .welcome-photo-fruit { animation-delay: .2s; }
+        .welcome-photo-vegetables { animation-delay: .3s; }
+        .welcome-caption { position: absolute; right: 12px; bottom: 12px; padding: 8px 11px; background: #fff; color: #203343; font-size: 11px; font-weight: 700; box-shadow: 0 4px 15px #2033431a; }
+        @keyframes welcome-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes photo-arrive { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 760px) {
+            .onboarding-page main { margin-top: 24px; }
+            .welcome-layout { grid-template-columns: 1fr; gap: 32px; }
+            .welcome-copy h1 { max-width: 13ch; font-size: 43px; }
+            .welcome-gallery { min-height: min(95vw, 430px); }
+        }
+        @media (max-width: 480px) {
+            .welcome-gallery { min-height: 350px; gap: 9px; }
+            .welcome-steps { display: grid; gap: 10px; }
+            .welcome-actions { align-items: stretch; flex-direction: column; }
+            .welcome-actions form, .welcome-actions button { width: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .welcome-copy, .welcome-photo { animation: none; }
+            .welcome-photo img, .welcome-actions button { transition: none; }
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <section class="welcome-layout" aria-labelledby="welcome-title">
+        <div class="welcome-copy">
+            <p class="welcome-kicker">A fresh start, {{ user.full_name|default:"friend" }}</p>
+            <h1 id="welcome-title">Welcome to Diet Services<span>.</span></h1>
+            <p>Make room for good food and small, steady habits. Set up your profile, choose a goal, and we’ll help you keep track at your own pace.</p>
+            <ul class="welcome-steps" aria-label="Your first steps">
+                <li><span>1</span>Build your profile</li>
+                <li><span>2</span>Choose a goal</li>
+                <li><span>3</span>Explore meals</li>
+            </ul>
+            <div class="welcome-actions">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="destination" value="getting_started">Set up my profile <span aria-hidden="true">&#8594;</span></button>
+                </form>
+                <form method="post">
+                    {% csrf_token %}
+                    <button class="welcome-secondary" type="submit" name="destination" value="dashboard">Go to dashboard</button>
+                </form>
+            </div>
+        </div>
+        <div class="welcome-gallery" aria-label="Fresh meals, fruit, and vegetables">
+            <figure class="welcome-photo welcome-photo-main"><img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;w=1000&amp;q=85" alt="A colorful bowl of fresh vegetables and greens"></figure>
+            <figure class="welcome-photo welcome-photo-fruit"><img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&amp;fit=crop&amp;w=700&amp;q=85" alt="A bright assortment of fresh fruit" class="fresh-fruit"></figure>
+            <figure class="welcome-photo welcome-photo-vegetables"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&amp;fit=crop&amp;w=700&amp;q=85" alt="Fresh salad greens and vegetables"></figure>
+            <span class="welcome-caption">Color your plate with variety</span>
+        </div>
+    </section>
+{% endblock %}

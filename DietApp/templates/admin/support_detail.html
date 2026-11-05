@@ -1,0 +1,9 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Support question · Diet Services{% endblock %}
+{% block page_title %}Support question{% endblock %}
+{% block content %}
+<p class="admin-intro">Submitted {{ question.created_at|date:"M j, Y · H:i" }}{% if question.user %} by {{ question.user.full_name }} ({{ question.user.email }}){% else %} by a deleted account{% endif %}.</p>
+<section class="admin-panel"><div class="admin-panel-body"><h2>{{ question.question }}</h2><p class="admin-intro">Topic: {{ question.get_topic_display }} · Status: {% if question.answer %}Answered{% else %}Pending{% endif %}</p>
+<form class="admin-form" method="post">{% csrf_token %}{{ form.answer.label_tag }}{{ form.answer }}{{ form.answer.errors }}<div class="admin-actions"><button class="admin-button" type="submit">Save response</button><a class="admin-button secondary" href="{% url 'admin_support' %}">Back to queue</a></div></form>
+</div></section>
+{% endblock %}

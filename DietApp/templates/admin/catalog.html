@@ -1,0 +1,12 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ title }} · Diet Services{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<p class="admin-intro">Manage records used across the diet services platform.</p>
+{% if can_add %}<div class="admin-actions"><a class="admin-button" href="{% url 'admin_catalog_add' catalog_slug %}">Add record</a></div>{% endif %}
+<form class="admin-search" method="get"><input type="search" name="q" value="{{ query }}" placeholder="Search records" aria-label="Search records"><button class="admin-button" type="submit">Search</button>{% if query %}<a class="admin-button secondary" href="{% url 'admin_catalog' catalog_slug %}">Clear</a>{% endif %}</form>
+<section class="admin-panel"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>{% for label in labels %}<th>{{ label }}</th>{% endfor %}<th>Actions</th></tr></thead><tbody>
+{% for row in rows %}<tr>{% for value in row.values %}<td>{{ value|default:"Not provided" }}</td>{% endfor %}<td><div class="admin-actions" style="margin:0">{% if can_change %}<a href="{% url 'admin_catalog_edit' catalog_slug row.pk %}">Edit</a>{% endif %}{% if can_delete %}<form method="post" action="{% url 'admin_catalog_delete' catalog_slug row.pk %}">{% csrf_token %}<button type="submit" style="border:0;background:none;color:#b94d39;font:inherit;font-weight:700;cursor:pointer">Delete</button></form>{% endif %}</div></td></tr>{% empty %}<tr><td colspan="{{ labels|length|add:1 }}" class="admin-empty">No records found.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<nav class="admin-pagination" aria-label="Record pages"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?q={{ query|urlencode }}&page={{ page.previous_page_number }}">Previous</a>{% endif %} {% if page.has_next %}<a href="?q={{ query|urlencode }}&page={{ page.next_page_number }}">Next</a>{% endif %}</span></nav>
+{% endblock %}

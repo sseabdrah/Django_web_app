@@ -1,0 +1,349 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1877F2">
+    <title>Diet Services - Home</title>
+    <style>
+        :root {
+            --main-blue: #1877f2;
+            --sky-blue: #4595ff;
+            --accent-amber: #d28a26;
+            --light-blue: #f7faff;
+            --white: #ffffff;
+            --dark-text: #203343;
+            --red: #b54747;
+            --border-blue: #d3e2f5;
+            --pale-blue: #eaf3ff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(rgba(247, 250, 255, .92), rgba(247, 250, 255, .92)), var(--pale-blue) url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1800&q=85") center / cover fixed;
+            color: var(--dark-text);
+            font-family: "Aptos", "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: inherit; }
+
+        .landing-shell {
+            width: min(1120px, calc(100% - 64px));
+            margin: 54px auto 38px;
+            overflow: hidden;
+            background: var(--light-blue);
+            box-shadow: 0 18px 34px #27371b4a;
+        }
+
+        .site-header {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 0 clamp(24px, 4vw, 52px);
+            border-bottom: 1px solid var(--border-blue);
+            background: var(--light-blue);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--main-blue);
+            font-family: "Aptos", "Segoe UI", sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .brand img { display: block; width: 48px; height: 48px; flex: 0 0 48px; object-fit: contain; }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: clamp(20px, 3vw, 38px);
+        }
+
+        nav a {
+            color: var(--main-blue);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color .2s ease;
+        }
+
+        nav a:hover { color: var(--sky-blue); }
+
+        .ai-float { position: fixed; z-index: 20; left: 18px; bottom: 18px; display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: var(--accent-amber); color: #fff; box-shadow: 0 4px 14px #20334335; font-size: 20px; text-decoration: none; }
+        .ai-float:focus-visible { outline: 3px solid var(--dark-text); outline-offset: 3px; }
+
+        nav .register-link {
+            padding: 11px 17px;
+            border: 1px solid var(--main-blue);
+            border-radius: 24px;
+            color: var(--main-blue);
+        }
+
+        .hero {
+            width: 100%;
+            min-height: 420px;
+            margin: 0 auto;
+            padding: 38px clamp(28px, 4vw, 54px) 48px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+            align-items: center;
+            gap: clamp(32px, 5vw, 62px);
+        }
+
+        .hero-copy { padding: 28px 0; }
+
+        h1 {
+            max-width: 510px;
+            margin: 0 0 22px;
+            color: var(--main-blue);
+            font-family: "Aptos", "Segoe UI", sans-serif;
+            font-size:  clamp(46px, 5.2vw, 70px);
+            font-weight: 800;
+            line-height: .98;
+        }
+
+        .hero-copy p {
+            max-width: 470px;
+            margin: 0 0 30px;
+            color: var(--dark-text);
+            font-size: 17px;
+            line-height: 1.75;
+        }
+
+        .button {
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 22px;
+            padding: 0 20px;
+            border-radius: 24px;
+            background: var(--main-blue);
+            color: var(--white);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background-color .2s ease, transform .2s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            background: #1464d8;
+        }
+
+        .button span { color: #f2c879; font-size: 19px; }
+
+        .hero-image {
+            width: 100%;
+            height: 330px;
+            min-height: 0;
+            display: block;
+            object-fit: cover;
+            border-radius: 0;
+            box-shadow: 7px 9px 16px #26322630;
+        }
+
+        footer {
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 24px;
+            background: var(--light-blue);
+            color: #5d7180;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 720px) {
+            .landing-shell { width: min(100% - 28px, 600px); margin: 22px auto; }
+            .site-header { min-height: 74px; padding: 14px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+
+            .brand { font-size: 21px; }
+            nav { justify-content: flex-start; flex-wrap: wrap; gap: 10px 16px; }
+            nav a { font-size: 13px; }
+            nav .register-link { padding: 8px 11px; }
+
+            .hero {
+                min-height: auto;
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 30px 20px 34px;
+            }
+
+            .hero-copy { padding: 0; }
+            h1 { font-size: clamp(40px, 10vw, 58px); }
+            .hero-copy p { font-size: 16px; }
+            .hero-image { height: 270px; min-height: 0; box-shadow: 5px 6px 12px #26322630; }
+        }
+
+        @media (max-width: 400px) {
+            .site-header { gap: 10px; padding: 14px 16px; }
+            .landing-shell { width: calc(100% - 20px); margin: 12px auto; }
+            .brand { font-size: 18px; }
+            nav { gap: 9px 12px; }
+            nav a { font-size: 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+        html, body { min-height: 100%; }
+        body { min-height: 100vh; background: #1877f2; color: #fff; }
+        .landing-shell { position: relative; isolation: isolate; display: flex; width: 100%; min-height: 100vh; flex-direction: column; margin: 0; overflow: hidden; background: #1877f2; color: #fff; }
+        .landing-shell::before { position: absolute; z-index: 0; inset: 0; background: linear-gradient(90deg, rgba(24,119,242,.88) 0%, rgba(24,119,242,.74) 52%, rgba(24,119,242,.52) 100%), linear-gradient(0deg, rgba(24,119,242,.78) 0%, rgba(24,119,242,.25) 62%); content: ""; pointer-events: none; }
+        .site-header { position: relative; z-index: 2; min-height: 76px; border-bottom-color: #ffffff25; background: transparent; }
+        .brand, nav a { color: #fff; }
+        nav a:hover { color: #a9cbff; }
+        nav .register-link { border-color: #ffffffb0; color: #fff; }
+        nav .register-link:hover { background: #ffffff19; }
+        .landing-shell main { position: relative; z-index: 1; display: flex; width: 100%; max-width: none; flex: 1; align-items: center; margin: 0; padding: 0 clamp(24px, 6vw, 88px) 95px; }
+        .hero { position: static; width: 100%; min-height: 0; grid-template-columns: 1fr; gap: 0; padding: 0; }
+        .hero-copy { position: relative; z-index: 1; max-width: 760px; padding: 32px 0; animation: home-copy-in .55s both; }
+        .hero-copy h1 { max-width: 13ch; margin-bottom: 20px; color: #fff; font-size: clamp(46px, 7vw, 82px); line-height: .98; text-shadow: 0 2px 12px #000b; }
+        .hero-copy p { max-width: 590px; margin-bottom: 28px; color: #fff; font-size: clamp(16px, 2vw, 21px); font-weight: 550; line-height: 1.55; text-shadow: 0 2px 8px #000c; }
+        .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+        .hero-actions .login-link { display: inline-flex; min-height: 50px; align-items: center; justify-content: center; padding: 0 17px; border: 1px solid #ffffffd9; background: rgba(24, 119, 242, 0.9); color: #fff; font-size: 14px; font-weight: 750; line-height: 1.3; text-decoration: none; text-shadow: 0 1px 3px #000; }
+        .hero-actions .login-link:hover { border-color: #fff; background: rgba(20, 100, 216, 0.96); color: #fff; }
+        .hero-actions .login-link:focus-visible { outline: 3px solid #9cc5ff; outline-offset: 3px; }
+        .hero-image { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; opacity: 0; transition: opacity 1s ease, transform 7s linear; transform: scale(1.035); }
+        .hero-image.is-active { opacity: 1; transform: scale(1); }
+        .hero-image { object-fit: cover; object-position: center; }
+        footer { position: absolute; z-index: 2; bottom: 0; left: 0; width: 100%; min-height: 72px; justify-content: space-between; padding: 16px clamp(24px, 5vw, 76px); background: transparent; color: #ffffffcc; }
+        .hero-controls { display: flex; align-items: center; gap: 10px; }
+        .hero-dot, .hero-pause { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #ffffff90; border-radius: 50%; background: #0c2d6380; color: #fff; cursor: pointer; }
+        .hero-dot { width: 12px; height: 12px; padding: 0; border: 0; background: #ffffff80; }
+        .hero-dot[aria-current="true"] { background: #1877f2; box-shadow: 0 0 0 4px #1877f255; }
+        .hero-pause { font-size: 12px; }
+        .hero-dot:focus-visible, .hero-pause:focus-visible { outline: 3px solid #9cc5ff; outline-offset: 3px; }
+        .ai-float { background: #1877f2; }
+        @keyframes home-copy-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 720px) {
+            .landing-shell { width: 100%; min-height: 100vh; margin: 0; }
+            .site-header { min-height: 70px; padding: 12px 18px; flex-direction: row; align-items: center; }
+            .brand { font-size: 16px; }
+            .brand img { width: 37px; height: 37px; flex-basis: 37px; }
+            nav { justify-content: flex-end; gap: 12px; }
+            nav a { font-size: 12px; }
+            nav a:first-child, nav .home-support-link { display: none; }
+            nav .register-link { padding: 9px 11px; }
+            .landing-shell main { min-height: calc(100vh - 70px); align-items: end; padding: 0 20px 125px; }
+            .hero { min-height: 0; grid-template-columns: 1fr; padding: 0; }
+            .hero-copy { padding: 24px 0; }
+            .hero-copy h1 { font-size: clamp(42px, 12vw, 64px); }
+            .hero-copy p { font-size: 16px; }
+            .hero-image { inset: 0; width: 100%; height: 100%; }
+            footer { min-height: 62px; padding: 12px 18px; font-size: 11px; }
+            .hero-controls { gap: 8px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .hero-image { transition: none; transform: none; } }
+    </style>
+</head>
+<body>
+    <div class="landing-shell">
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="Diet Services home">
+            <img src="{% static 'DietApp/images/diet-services-logo.png' %}" alt="">
+            <span>Diet Services</span>
+        </a>
+        <nav aria-label="Main navigation">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'login' %}">Login</a>
+            <a class="home-support-link" href="{% url 'support' %}">Help &amp; Support</a>
+            <a class="register-link" href="{% url 'register' %}">Register</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" aria-labelledby="welcome-title">
+            <img class="hero-image is-active" src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;w=2200&amp;q=88" alt="A colorful bowl of fresh vegetables and greens">
+            <img class="hero-image" src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&amp;fit=crop&amp;w=2200&amp;q=88" alt="Fresh salad greens and vegetables">
+            <img class="hero-image" src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&amp;fit=crop&amp;w=2200&amp;q=88" alt="A balanced meal with vegetables and grains">
+            <div class="hero-copy" id="hero-copy" aria-live="polite">
+                <p class="hero-eyebrow" id="hero-eyebrow">A healthier rhythm</p>
+                <h1 id="welcome-title">Eat well. Feel well.</h1>
+                <p id="hero-description">A little more balance, one meal and one day at a time. Keep your food, hydration, and goals in one simple place.</p>
+                <div class="hero-actions">
+                    <a href="{% url 'register' %}" class="button">Get started <span aria-hidden="true">&#8594;</span></a>
+                    <a class="login-link" href="{% url 'login' %}">I already have an account</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>&copy; 2026 Diet Services. A steady approach to everyday nutrition.</span>
+        <div class="hero-controls" aria-label="Hero image controls">
+            <button class="hero-dot" type="button" aria-label="Show scene 1" aria-current="true" data-slide="0"></button>
+            <button class="hero-dot" type="button" aria-label="Show scene 2" aria-current="false" data-slide="1"></button>
+            <button class="hero-dot" type="button" aria-label="Show scene 3" aria-current="false" data-slide="2"></button>
+            <button class="hero-pause" type="button" aria-label="Pause image transitions" aria-pressed="false">&#10074;&#10074;</button>
+        </div>
+    </footer>
+    </div>
+    <a class="ai-float" href="{% url 'diet_ai' %}" aria-label="Ask Diet AI" title="Ask Diet AI">✦</a>
+    <script>
+        (() => {
+            const scenes = [
+                { eyebrow: "A healthier rhythm", title: "Eat well. Feel well.", description: "A little more balance, one meal and one day at a time. Keep your food, hydration, and goals in one simple place." },
+                { eyebrow: "Make every meal count", title: "Find your everyday balance.", description: "Explore nourishing foods, keep track of what works for you, and build habits that fit real life." },
+                { eyebrow: "Your goals, your pace", title: "Small steps add up.", description: "Set personal goals, notice your progress, and make your wellbeing journey your own." }
+            ];
+            const images = [...document.querySelectorAll(".hero-image")];
+            const dots = [...document.querySelectorAll(".hero-dot")];
+            const eyebrow = document.querySelector("#hero-eyebrow");
+            const title = document.querySelector("#welcome-title");
+            const description = document.querySelector("#hero-description");
+            const pauseButton = document.querySelector(".hero-pause");
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+            let activeIndex = 0;
+            let timer = null;
+            let paused = reducedMotion.matches;
+
+            const showScene = (index) => {
+                activeIndex = index;
+                images.forEach((image, imageIndex) => image.classList.toggle("is-active", imageIndex === index));
+                dots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === index)));
+                eyebrow.textContent = scenes[index].eyebrow;
+                title.textContent = scenes[index].title;
+                description.textContent = scenes[index].description;
+            };
+            const stopTimer = () => { if (timer) window.clearInterval(timer); timer = null; };
+            const startTimer = () => {
+                stopTimer();
+                if (!paused) timer = window.setInterval(() => showScene((activeIndex + 1) % scenes.length), 6500);
+            };
+            dots.forEach((dot) => dot.addEventListener("click", () => {
+                showScene(Number(dot.dataset.slide));
+                startTimer();
+            }));
+            pauseButton.addEventListener("click", () => {
+                paused = !paused;
+                pauseButton.setAttribute("aria-pressed", String(paused));
+                pauseButton.setAttribute("aria-label", paused ? "Resume image transitions" : "Pause image transitions");
+                pauseButton.innerHTML = paused ? "&#9654;" : "&#10074;&#10074;";
+                startTimer();
+            });
+            reducedMotion.addEventListener("change", (event) => {
+                if (event.matches) paused = true;
+                startTimer();
+            });
+            startTimer();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Confirm deletion · Diet Services{% endblock %}
+{% block page_title %}Confirm deletion{% endblock %}
+{% block content %}
+<section class="admin-panel"><div class="admin-panel-body"><h2>Delete {{ object_label }}?</h2><p class="admin-intro">This action cannot be undone. Related records may prevent deletion.</p><form method="post">{% csrf_token %}<input type="hidden" name="confirm" value="yes"><div class="admin-actions"><button class="admin-button danger" type="submit">Confirm deletion</button><a class="admin-button secondary" href="{{ cancel_url }}">Cancel</a></div></form></div></section>
+{% endblock %}

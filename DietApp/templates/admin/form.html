@@ -1,0 +1,11 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ title }} · Diet Services{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<form class="admin-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}<p><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</p>{% endfor %}
+    <div class="admin-actions"><button class="admin-button" type="submit">Save changes</button><a class="admin-button secondary" href="{{ cancel_url }}">Cancel</a></div>
+</form>
+{% endblock %}

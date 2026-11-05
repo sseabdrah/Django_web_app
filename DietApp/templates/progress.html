@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Progress - Diet Services{% endblock %}
+{% block page_styles %}
+    <style>
+        .progress-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:20px; }
+        .progress-heading h1 { margin-bottom:4px; }
+        .progress-heading .intro { margin:0; }
+        .period-tabs { display:flex; gap:4px; margin:0 0 20px; padding:4px; border:1px solid var(--line); background:#fff; }
+        .period-tabs a { min-height:38px; display:grid; flex:1; place-items:center; padding:0 10px; color:#5d7180; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap; }
+        .period-tabs a[aria-current="page"] { background:var(--primary-blue); color:#fff; }
+        .progress-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+        .summary-tile { min-width:0; padding:17px; border:1px solid var(--line); background:#fff; }
+        .summary-tile span { display:block; color:#5d7180; font-size:12px; }
+        .summary-tile strong { display:block; margin-top:6px; color:var(--primary-blue); font-size:23px; overflow-wrap:anywhere; }
+        .summary-tile small { color:#5d7180; font-size:12px; font-weight:500; }
+        .progress-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+        .progress-card { min-width:0; margin:0; padding:19px; border:1px solid var(--line); background:#fff; }
+        .progress-card h2 { margin:0 0 5px; font-size:19px; font-weight:700; }
+        .card-subtitle { margin:0 0 16px; color:#5d7180; font-size:12px; }
+        .chart-scroll { overflow-x:auto; padding-bottom:6px; }
+        .chart-bars { display:flex; min-width:100%; height:192px; align-items:stretch; gap:8px; }
+        .chart-day { display:flex; min-width:35px; flex:1 0 35px; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; }
+        .chart-value { min-height:14px; color:#526052; font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .chart-track { display:flex; width:min(28px,100%); height:140px; align-items:flex-end; background:#eaf3ff; }
+        .chart-track.water { background:#eaf3ff; }
+        .chart-bar { display:block; width:100%; min-height:2px; background:#1877f2; }
+        .chart-bar.water { background:#4595ff; }
+        .chart-date { color:#526052; font-size:10px; white-space:nowrap; }
+        .weight-points { display:flex; min-width:100%; height:160px; align-items:stretch; gap:8px; }
+        .weight-chart { display:block; width:100%; min-width:420px; height:180px; overflow:visible; }
+        .weight-point { display:flex; min-width:42px; flex:1 0 42px; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; }
+        .weight-track { display:flex; width:28px; height:112px; align-items:flex-end; background:#eaf3ff; }
+        .weight-bar { width:100%; min-height:3px; background:#d28a26; }
+        .chart-legend { margin-top:13px; color:#5d7180; font-size:12px; }
+        .macro-row { margin:15px 0; }
+        .macro-label { display:flex; justify-content:space-between; gap:12px; margin-bottom:7px; font-size:13px; }
+        .macro-label strong { color:var(--primary-blue); }
+        .macro-track { height:8px; overflow:hidden; background:#eaf3ff; }
+        .macro-track span { display:block; height:100%; background:#1877f2; }
+        .macro-row:nth-of-type(2) .macro-track span { background:#4595ff; }
+        .macro-row:nth-of-type(3) .macro-track span { background:#d28a26; }
+        .achievement-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .achievement-item { min-width:0; padding:12px; border:1px solid var(--line); }
+        .achievement-item strong,.achievement-item span { display:block; overflow-wrap:anywhere; }
+        .achievement-item strong { color:var(--primary-blue); font-size:13px; }
+        .achievement-item span { margin-top:4px; color:#5d7180; font-size:11px; }
+        .weight-table { width:100%; border-collapse:collapse; text-align:left; }
+        .weight-table th,.weight-table td { padding:10px 7px; border-bottom:1px solid var(--line); font-size:13px; }
+        .weight-table th { color:#5d7180; font-size:11px; }
+        @media(max-width:760px) { .progress-grid { grid-template-columns:1fr; } }
+        @media(max-width:500px) { .progress-heading { align-items:flex-start; flex-direction:column; } .progress-summary { grid-template-columns:1fr 1fr; } .progress-summary .summary-tile:last-child { grid-column:1 / -1; } .period-tabs a { padding:0 5px; font-size:11px; } .progress-card { padding:15px; } }
+    </style>
+{% endblock %}
+{% block content %}
+    <header class="progress-heading">
+        <div><h1>Progress</h1><p class="intro">Your health trends from {{ period_start|date:"M j" }} to {{ period_end|date:"M j, Y" }}.</p></div>
+        <a class="action secondary" href="{% url 'model_form' 'weight-logs' %}">Log weight</a>
+    </header>
+    <nav class="period-tabs" aria-label="Progress date range">
+        {% for option in period_options %}<a href="?period={{ option.0 }}"{% if selected_period == option.0 %} aria-current="page"{% endif %}>{{ option.1 }}</a>{% endfor %}
+    </nav>
+    <section class="progress-summary" aria-label="Progress summary">
+        <div class="summary-tile"><span>Current weight</span><strong>{% if current_weight %}{{ current_weight.weight_kg }} <small>kg</small>{% else %}Not logged{% endif %}</strong></div>
+        <div class="summary-tile"><span>Starting weight</span><strong>{% if starting_weight %}{{ starting_weight.weight_kg }} <small>kg</small>{% else %}Not logged{% endif %}</strong></div>
+        <div class="summary-tile"><span>Daily calorie target</span><strong>{{ calorie_target }} <small>kcal</small></strong></div>
+    </section>
+    <div class="progress-grid">
+        <figure class="progress-card">
+            <figcaption><h2>Calorie intake</h2><p class="card-subtitle">Daily totals · target {{ calorie_target }} kcal</p></figcaption>
+            <div class="chart-scroll"><div class="chart-bars" role="img" aria-label="Calories consumed by day for the selected period">
+                {% for day in daily_history %}<div class="chart-day"><span class="chart-value">{{ day.calories }}</span><div class="chart-track"><span class="chart-bar" style="height:{{ day.calories_percent }}%"></span></div><span class="chart-date">{{ day.date|date:"M j" }}</span></div>{% endfor %}
+            </div></div>
+            <p class="chart-legend">Calories consumed · bars scale against the daily target</p>
+        </figure>
+        <figure class="progress-card">
+            <figcaption><h2>Water intake</h2><p class="card-subtitle">Daily totals · target {{ water_target }} ml</p></figcaption>
+            <div class="chart-scroll"><div class="chart-bars" role="img" aria-label="Water consumed by day for the selected period">
+                {% for day in daily_history %}<div class="chart-day"><span class="chart-value">{{ day.water_ml }}</span><div class="chart-track water"><span class="chart-bar water" style="height:{{ day.water_percent }}%"></span></div><span class="chart-date">{{ day.date|date:"M j" }}</span></div>{% endfor %}
+            </div></div>
+            <p class="chart-legend">Water consumed · bars scale against the daily target</p>
+        </figure>
+        <figure class="progress-card">
+            <figcaption><h2>Weight trend</h2><p class="card-subtitle">Logged body weight during {{ period_label|lower }}</p></figcaption>
+            {% if weight_chart %}<div class="chart-scroll"><svg class="weight-chart" viewBox="0 0 700 180" role="img" aria-label="Weight trend from {{ period_start|date:'M j' }} to {{ period_end|date:'M j' }}">
+                <polyline points="{{ weight_chart_points }}" fill="none" stroke="#1877f2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                {% for point in weight_chart %}<circle cx="{{ point.x }}" cy="{{ point.y }}" r="5" fill="#fff" stroke="#1877f2" stroke-width="3"><title>{{ point.date|date:"M j, Y" }}: {{ point.weight_kg }} kg</title></circle>{% endfor %}
+            </svg></div><p class="chart-legend">Earlier entries are on the left; latest are on the right. The table below shows dates and exact values.</p>
+            {% else %}<p class="empty">No weight entries in this period.</p>{% endif %}
+        </figure>
+        <section class="progress-card" aria-labelledby="macro-title">
+            <h2 id="macro-title">Macronutrients</h2><p class="card-subtitle">Average intake per day compared with your targets</p>
+            {% for macro in macros %}<div class="macro-row"><div class="macro-label"><span>{{ macro.name }} · {{ macro.average }} g/day{% if macro.target %} / {{ macro.target }} g{% endif %}</span><strong>{{ macro.share }}%</strong></div><div class="macro-track" role="progressbar" aria-label="{{ macro.name }} target progress" aria-valuenow="{{ macro.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ macro.percent }}%"></span></div></div>{% endfor %}
+            <p class="chart-legend">Percent at right is the share of recorded macro energy.</p>
+        </section>
+        <section class="progress-card" aria-labelledby="achievement-title">
+            <h2 id="achievement-title">Achievements</h2><p class="card-subtitle">Badges you have earned</p>
+            {% if badges %}<div class="achievement-list">{% for badge in badges %}<article class="achievement-item"><strong>{{ badge.achievement_id.name }}</strong><span>Earned {{ badge.earned_date|date:"M j, Y" }}</span></article>{% endfor %}</div>{% else %}<p class="empty">Keep logging meals and water to build your achievements.</p>{% endif %}
+            <div class="action-row"><a class="action secondary" href="{% url 'achievements' %}">All achievements</a></div>
+        </section>
+        <section class="progress-card" aria-labelledby="weight-history-title">
+            <h2 id="weight-history-title">Weight history</h2>
+            {% if weight_records %}<table class="weight-table"><thead><tr><th scope="col">Date</th><th scope="col">Weight</th></tr></thead><tbody>{% for record in weight_records %}<tr>{% for detail in record.details %}{% if detail.label == "Log Date" %}<td>{{ detail.value }}</td>{% endif %}{% if detail.label == "Weight Kg" %}<td>{{ detail.value }} kg</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody></table>{% else %}<p class="empty">No weight entries in this period.</p>{% endif %}
+        </section>
+    </div>
+{% endblock %}

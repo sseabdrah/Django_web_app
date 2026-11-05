@@ -1,0 +1,9 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Support questions · Diet Services{% endblock %}
+{% block page_title %}Support questions{% endblock %}
+{% block content %}
+<p class="admin-intro">Review user-submitted questions and provide a response. Similar questions share the same answer.</p>
+<section class="admin-panel"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Question</th><th>User</th><th>Submitted</th><th>Status</th><th></th></tr></thead><tbody>
+{% for question in questions %}<tr><td>{{ question.question|truncatechars:100 }}</td><td>{% if question.user %}<a href="{% url 'admin_user_detail' question.user.pk %}">{{ question.user.full_name }}<br>{{ question.user.email }}</a>{% else %}Deleted account{% endif %}</td><td>{{ question.created_at|date:"M j, Y · H:i" }}</td><td>{% if question.answer %}Answered{% else %}Pending{% endif %}</td><td><a href="{% url 'admin_support_answer' question.pk %}">{% if question.answer %}Read / edit{% else %}Answer{% endif %}</a></td></tr>{% empty %}<tr><td colspan="5" class="admin-empty">The support queue is empty.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

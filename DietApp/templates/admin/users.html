@@ -1,0 +1,12 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Users · Diet Services{% endblock %}
+{% block page_title %}User management{% endblock %}
+{% block content %}
+<p class="admin-intro">Search member accounts, review account status, or update permitted details.</p>
+{% if request.user.is_superuser or perms.DietApp.add_users %}<div class="admin-actions"><a class="admin-button" href="{% url 'admin_user_add' %}">Add user</a></div>{% endif %}
+<form class="admin-search" method="get"><input type="search" name="q" value="{{ query }}" placeholder="Search name, email, or phone" aria-label="Search users"><button class="admin-button" type="submit">Search</button>{% if query %}<a class="admin-button secondary" href="{% url 'admin_users' %}">Clear</a>{% endif %}</form>
+<section class="admin-panel"><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th></tr></thead><tbody>
+{% for member in page.object_list %}<tr><td>{{ member.pk }}</td><td><a href="{% url 'admin_user_detail' member.pk %}">{{ member.full_name }}</a></td><td>{{ member.email }}</td><td>{{ member.admin_role }}</td><td>{{ member.created_at|date:"M j, Y" }}</td><td>{% if member.is_active %}Active{% else %}Inactive{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="admin-empty">No matching accounts.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<nav class="admin-pagination" aria-label="User pages"><span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span><span>{% if page.has_previous %}<a href="?q={{ query|urlencode }}&page={{ page.previous_page_number }}">Previous</a>{% endif %} {% if page.has_next %}<a href="?q={{ query|urlencode }}&page={{ page.next_page_number }}">Next</a>{% endif %}</span></nav>
+{% endblock %}

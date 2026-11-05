@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Meal Plan - Diet Services{% endblock %}
+{% block content %}
+    <h1>Meal Plan</h1>
+    <p class="intro">Your upcoming planned meals and recipes.</p>
+    <div class="action-row"><a class="action" href="{% url 'model_form' 'meal-plans' %}">Plan a meal</a><a class="action secondary" href="{% url 'food_search' %}">Explore recipes</a></div>
+    {% if plans %}
+        {% for plan in plans %}
+            <section class="panel">
+                <dl class="record-list">{% for detail in plan.details %}<div><dt>{{ detail.label }}</dt><dd>{{ detail.value }}</dd></div>{% endfor %}</dl>
+                <a class="action secondary" href="{{ plan.edit_url }}">Edit plan</a>
+            </section>
+        {% endfor %}
+    {% else %}
+        <section class="panel"><p class="empty">No upcoming meals are planned.</p></section>
+    {% endif %}
+{% endblock %}

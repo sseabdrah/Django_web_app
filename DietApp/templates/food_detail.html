@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ food.name }} - Diet Services{% endblock %}
+{% block content %}
+    <h1>{{ food.name }}</h1>
+    <p class="intro">{% if food.brand %}{{ food.brand }} · {% endif %}Nutrition per {{ food.serving_size }} {{ food.serving_unit }}{% if food.barcode %} · Barcode {{ food.barcode }}{% endif %}</p>
+    <section class="panel" aria-label="Food nutrition">
+        <dl class="record-list">
+            <div><dt>Calories</dt><dd>{{ food.calories }} kcal</dd></div>
+            <div><dt>Protein</dt><dd>{{ food.protein|floatformat:1 }} g</dd></div>
+            <div><dt>Carbohydrates</dt><dd>{{ food.carbs|floatformat:1 }} g</dd></div>
+            <div><dt>Fat</dt><dd>{{ food.fat|floatformat:1 }} g</dd></div>
+            <div><dt>Fiber</dt><dd>{{ food.fiber|floatformat:1 }} g</dd></div>
+        </dl>
+    </section>
+    <div class="action-row"><a class="action" href="{% url 'model_form' 'food-logs' %}?food_id={{ food.pk }}">Log this food</a><a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
+{% endblock %}

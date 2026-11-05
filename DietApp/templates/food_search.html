@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Explore Food &amp; Recipes - Diet Services{% endblock %}
+{% block content %}
+    <h1>Explore</h1>
+    <p class="intro">Search your food library by name, brand, or barcode, and find recipes to plan.</p>
+    <section class="panel">
+        <form method="get" role="search">
+            <label for="food-query">Food or recipe</label>
+            <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:10px;">
+                <input id="food-query" name="q" type="search" value="{{ query }}" placeholder="Try a food, brand, barcode, or recipe">
+                <button class="action" type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+    <section class="panel" aria-labelledby="food-results-title">
+        <h2 id="food-results-title">Foods</h2>
+        {% if foods %}
+            <div style="display:grid;">
+                {% for food in foods %}
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto auto; align-items:center; gap:12px; padding:13px 0; border-top:1px solid var(--line);">
+                        <div><strong>{{ food.name }}</strong>{% if food.brand %}<span> · {{ food.brand }}</span>{% endif %}<div class="helptext">{{ food.calories }} kcal · {{ food.protein|floatformat:0 }}g protein per {{ food.serving_size }} {{ food.serving_unit }}</div></div>
+                        <a href="{% url 'food_detail' food.pk %}">Details</a>
+                        <a class="action secondary" href="{% url 'model_form' 'food-logs' %}?food_id={{ food.pk }}">Log</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}<p class="empty">{% if query %}No foods match this search in your library.{% else %}Add foods to your library to search and log them here.{% endif %}</p>{% endif %}
+        <div class="action-row"><a class="action secondary" href="{% url 'model_form' 'foods' %}">Add food</a></div>
+    </section>
+    <section class="panel" aria-labelledby="recipe-results-title">
+        <h2 id="recipe-results-title">Recipes</h2>
+        {% if recipes %}
+            <div style="display:grid;">
+                {% for recipe in recipes %}
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:12px; padding:13px 0; border-top:1px solid var(--line);">
+                        <div><strong>{{ recipe.name }}</strong><div class="helptext">{{ recipe.calories_per_serving }} kcal per serving{% if recipe.total_time_minutes %} · {{ recipe.total_time_minutes }} min{% endif %}</div></div>
+                        <a class="action secondary" href="{% url 'recipe_detail' recipe.pk %}">View recipe</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}<p class="empty">No recipes match this search.</p>{% endif %}
+        <div class="action-row"><a class="action secondary" href="{% url 'model_form' 'recipes' %}">Add recipe</a></div>
+    </section>
+{% endblock %}

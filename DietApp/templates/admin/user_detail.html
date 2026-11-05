@@ -1,0 +1,9 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ managed_user.full_name }} · Users{% endblock %}
+{% block page_title %}User account{% endblock %}
+{% block content %}
+<p class="admin-intro">Account details and access status. Passwords and authentication secrets are never displayed.</p>
+<div class="admin-actions"><a class="admin-button secondary" href="{% url 'admin_users' %}">All users</a>{% if request.user.is_superuser or perms.DietApp.change_users %}<a class="admin-button" href="{% url 'admin_user_edit' managed_user.pk %}">Edit account</a><a class="admin-button secondary" href="{% url 'admin_user_password_reset' managed_user.pk %}">Reset password</a>{% endif %}</div>
+<section class="admin-panel"><div class="admin-panel-body"><dl class="record-list"><div><dt>Database ID</dt><dd>{{ managed_user.pk }}</dd></div><div><dt>Name</dt><dd>{{ managed_user.full_name }}</dd></div><div><dt>Email</dt><dd>{{ managed_user.email }}</dd></div><div><dt>Phone</dt><dd>{{ managed_user.phone }}</dd></div><div><dt>Role</dt><dd>{{ role }}</dd></div><div><dt>Registered</dt><dd>{{ managed_user.created_at|date:"M j, Y" }}</dd></div><div><dt>Last login</dt><dd>{{ managed_user.last_login|date:"M j, Y" }}</dd></div><div><dt>Account status</dt><dd>{% if managed_user.is_active %}Active{% else %}Inactive{% endif %}</dd></div></dl>
+{% if request.user.is_superuser or perms.DietApp.delete_users %}<div class="admin-actions"><form method="post" action="{% url 'admin_user_delete' managed_user.pk %}">{% csrf_token %}<button class="admin-button danger" type="submit">Delete account</button></form></div>{% endif %}</div></section>
+{% endblock %}
