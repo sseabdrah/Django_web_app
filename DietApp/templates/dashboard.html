@@ -134,11 +134,13 @@
             <p class="summary-label">Calories today</p>
             <p class="summary-value">{{ daily_summary.calories }} <small>{% if daily_summary.targets.calories %} / {{ daily_summary.targets.calories }} kcal{% else %}kcal{% endif %}</small></p>
             {% if daily_summary.targets.calories %}<div class="summary-track" role="progressbar" aria-label="Calorie target progress" aria-valuenow="{{ daily_summary.calories_progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ daily_summary.calories_progress }}%"></span></div>{% endif %}
-            <div class="macro-line"><span>Protein <strong>{{ daily_summary.protein|floatformat:0 }}g</strong></span><span>Carbs <strong>{{ daily_summary.carbs|floatformat:0 }}g</strong></span><span>Fat <strong>{{ daily_summary.fat|floatformat:0 }}g</strong></span></div>
+            {% if daily_summary.calories_remaining != None %}<p class="summary-label">{{ daily_summary.calories_remaining }} kcal remaining</p>{% endif %}
+            <div class="macro-line"><span>Protein <strong>{{ daily_summary.protein|floatformat:0 }}{% if daily_summary.targets.protein %} / {{ daily_summary.targets.protein }}{% endif %}g</strong></span><span>Carbs <strong>{{ daily_summary.carbs|floatformat:0 }}{% if daily_summary.targets.carbs %} / {{ daily_summary.targets.carbs }}{% endif %}g</strong></span><span>Fat <strong>{{ daily_summary.fat|floatformat:0 }}{% if daily_summary.targets.fat %} / {{ daily_summary.targets.fat }}{% endif %}g</strong></span></div>
         </div>
         <div class="summary-block">
             <p class="summary-label">Water today</p>
             <p class="summary-value">{{ daily_summary.water_ml }} <small>ml</small></p>
+            <p><a href="{% url 'water_tracker' %}">Log water &rarr;</a></p>
             {% if daily_summary.targets.water %}<div class="summary-track" role="progressbar" aria-label="Water target progress" aria-valuenow="{{ daily_summary.water_progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ daily_summary.water_progress }}%"></span></div><p class="summary-label">of {{ daily_summary.targets.water }} ml target</p>{% endif %}
         </div>
         <a class="summary-block" href="{% url 'progress' %}" style="text-decoration: none;">
@@ -153,6 +155,7 @@
             <p class="summary-label">Best: {{ streak.best }} days</p>
         </a>
     </section>
+    <section aria-label="Quick actions"><div class="action-row"><a class="action" href="{% url 'food_search' %}">Log meal</a><a class="action secondary" href="{% url 'water_tracker' %}">Log water</a><a class="action secondary" href="{% url 'meal_plan' %}">Meal plan</a><a class="action secondary" href="{% url 'model_form' 'weight-logs' %}">Track weight</a></div></section>
     <section class="meal-section" aria-labelledby="today-meals-title">
         <div class="section-heading">
             <h2 id="today-meals-title">Today's Meals</h2>

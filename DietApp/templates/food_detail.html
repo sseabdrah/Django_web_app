@@ -12,5 +12,5 @@
             <div><dt>Fiber</dt><dd>{{ food.fiber|floatformat:1 }} g</dd></div>
         </dl>
     </section>
-    <div class="action-row"><a class="action" href="{% url 'model_form' 'food-logs' %}?food_id={{ food.pk }}">Log this food</a><a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
+    <div class="action-row"><a class="action" href="{% url 'log_food_portion' food.pk %}">Log this food</a><a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
 {% endblock %}

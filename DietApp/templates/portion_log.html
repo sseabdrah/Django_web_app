@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Log {{ food.name }} - Diet Services{% endblock %}
+{% block content %}
+<h1>Log {{ food.name }}</h1>
+<p class="intro">Choose your portion and meal. Nutrition is calculated from {{ food.serving_size }} {{ food.serving_unit }} per serving.</p>
+<section class="panel">
+    <h2>Nutrition preview</h2>
+    <p id="nutrition-preview" aria-live="polite">Per serving: {{ food.calories }} kcal · {{ food.protein }}g protein · {{ food.carbs }}g carbs · {{ food.fat }}g fat · {{ food.fiber }}g fiber</p>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<p class="helptext">Quantity is in {{ food.serving_unit }}. For example, enter {{ food.serving_size }} for one serving.</p><button type="submit">Log meal</button></form>
+</section>
+<div class="action-row"><a class="action secondary" href="{% url 'food_detail' food.pk %}">Back to food</a><a href="{% url 'model_form' 'food-logs' %}?food_id={{ food.pk }}">Use the existing detailed form</a></div>
+{{ food.serving_size|json_script:"serving-size" }}{{ food.calories|json_script:"food-calories" }}{{ food.protein|json_script:"food-protein" }}{{ food.carbs|json_script:"food-carbs" }}{{ food.fat|json_script:"food-fat" }}{{ food.fiber|json_script:"food-fiber" }}
+<script>
+(() => {
+ const read = id => JSON.parse(document.getElementById(id).textContent);
+ const input = document.getElementById('id_quantity'), preview = document.getElementById('nutrition-preview');
+ const serving = read('serving-size');
+ function update() {
+   const quantity = Number(input.value);
+   if (!Number.isFinite(quantity) || quantity <= 0 || serving <= 0) return;
+   const ratio = quantity / serving;
+   preview.textContent = `${Math.round(read('food-calories') * ratio)} kcal · ${(read('food-protein') * ratio).toFixed(1)}g protein · ${(read('food-carbs') * ratio).toFixed(1)}g carbs · ${(read('food-fat') * ratio).toFixed(1)}g fat · ${(read('food-fiber') * ratio).toFixed(1)}g fiber`;
+ }
+ input.addEventListener('input', update); update();
+})();
+</script>
+{% endblock %}

@@ -1128,3 +1128,116 @@ class DietAIProviderTests(TestCase):
 			answer = generate_diet_ai_answer("Question", "general", "Fallback")
 
 		self.assertIsNone(answer)
+
+class NutritionWorkflowTests(TestCase):
+    def setUp(self):
+        today = timezone.localdate()
+        self.user = Users.objects.create(user_id=1, full_name="Member", email="member@example.com", password_hash="x", phone="123", created_at=today, last_login=today)
+        self.other = Users.objects.create(user_id=2, full_name="Other", email="other@example.com", password_hash="x", phone="456", created_at=today, last_login=today)
+        self.food = Food.objects.create(food_id=1, user_id=self.user, name="Oats", serving_size=100, serving_unit="g", calories=200, protein=10, carbs=30, fat=4, fiber=5)
+        session = self.client.session
+        session['user_id'] = self.user.pk
+        session.save()
+
+    def test_portion_log_calculates_nutrients(self):
+        response = self.client.post(reverse('log_food_portion', args=[self.food.pk]), {'quantity': '150', 'meal_type': 'lunch', 'log_date': '2026-01-02', 'log_time': '12:30', 'notes': 'Lunch'})
+        self.assertRedirects(response, reverse('dashboard'))
+        log = FoodLog.objects.get(user_id=self.user)
+        self.assertEqual((log.calories_consumed, log.protein_consumed, log.carbs_consumed, log.fat_consumed, log.fiber_consumed), (300, 15, 45, 6, 7.5))
+        self.assertEqual(log.serving_unit, 'g')
+
+    def test_portion_rejects_invalid_and_other_users_food(self):
+        response = self.client.post(reverse('log_food_portion', args=[self.food.pk]), {'quantity': '-1', 'meal_type': 'lunch', 'log_date': '2026-01-02', 'log_time': '12:30'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(FoodLog.objects.exists())
+        self.food.user_id = self.other
+        self.food.save()
+        self.assertEqual(self.client.get(reverse('log_food_portion', args=[self.food.pk])).status_code, 404)
+
+    def test_water_tracking_validation_and_ownership(self):
+        url = reverse('water_tracker')
+        self.client.post(url, {'amount_ml': '500'})
+        self.client.post(url, {'amount_ml': '-10'})
+        log = WaterLog.objects.get(user_id=self.user)
+        self.assertContains(self.client.get(url), '500 ml')
+        other_log = WaterLog.objects.create(water_log_id=2, user_id=self.other, amount_ml=250, log_date=timezone.localdate(), log_time=timezone.localtime().time())
+        self.assertEqual(self.client.post(reverse('water_log_delete', args=[other_log.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse('water_log_delete', args=[log.pk])).status_code, 405)
+        self.client.post(reverse('water_log_delete', args=[log.pk]))
+        self.assertFalse(WaterLog.objects.filter(pk=log.pk).exists())
+        self.assertTrue(WaterLog.objects.filter(pk=other_log.pk).exists())
+
+    def test_calorie_recalculation_and_invalid_profile(self):
+        url = reverse('recalculate_targets')
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.client.post(url)
+        profile = UserProfile.objects.create(user_id=self.user, age=30, gender='M', weight_kg=70, height_cm=175, activity_level='moderate', health_goal='maintain', daily_water_target=2000, updated_at=timezone.localdate())
+        self.client.post(url)
+        profile.refresh_from_db()
+        self.assertEqual(profile.daily_calorie_target, round((88.362 + 13.397*70 + 4.799*175 - 5.677*30) * 1.55))
+        self.assertEqual(profile.daily_water_target, 2000)
+        profile.gender = 'O'
+        profile.save()
+        self.client.post(url)
+        profile.refresh_from_db()
+        self.assertIsNotNone(profile.daily_calorie_target)
+
+    def test_generate_plan_keeps_existing_and_respects_preferences(self):
+        from DietApp.models import MealPlan
+        today = timezone.localdate()
+        UserProfile.objects.create(user_id=self.user, dietary_preferences=['vegan'], updated_at=today)
+        vegan = Recipe.objects.create(recipe_id=1, name='Vegan meal', prep_time_minutes=10, cook_time_minutes=10, total_time_minutes=20, servings=1, calories_per_serving=400, protein_per_serving=10, carbs_per_serving=40, fat_per_serving=10, dietary_tags=['vegan'], is_public=True)
+        Recipe.objects.create(recipe_id=2, name='Other meal', prep_time_minutes=10, cook_time_minutes=10, total_time_minutes=20, servings=1, calories_per_serving=400, protein_per_serving=10, carbs_per_serving=40, fat_per_serving=10, dietary_tags=[], is_public=True)
+        MealPlan.objects.create(meal_id=1, user_id=self.user, plan_date=today, meal_type='breakfast', custom_meal_name='My breakfast')
+        self.client.post(reverse('generate_meal_plan'))
+        plans = MealPlan.objects.filter(user_id=self.user)
+        self.assertEqual(plans.count(), 28)
+        self.assertEqual(plans.get(plan_date=today, meal_type='breakfast').custom_meal_name, 'My breakfast')
+        self.assertEqual(plans.filter(recipe_id=vegan).count(), 27)
+        self.client.post(reverse('generate_meal_plan'))
+        self.assertEqual(plans.count(), 28)
+
+    def test_favorites_and_export_are_user_scoped(self):
+        from DietApp.models import FavoriteRecipe
+        recipe = Recipe.objects.create(recipe_id=1, name='Soup', prep_time_minutes=1, cook_time_minutes=1, total_time_minutes=2, servings=1, calories_per_serving=100, protein_per_serving=1, carbs_per_serving=1, fat_per_serving=1, is_public=True)
+        url = reverse('toggle_recipe_favorite', args=[recipe.pk])
+        self.client.post(url)
+        self.assertTrue(FavoriteRecipe.objects.filter(user_id=self.user, recipe_id=recipe).exists())
+        self.client.post(url)
+        self.assertFalse(FavoriteRecipe.objects.filter(user_id=self.user, recipe_id=recipe).exists())
+        WaterLog.objects.create(water_log_id=10, user_id=self.other, amount_ml=999, log_date=timezone.localdate(), log_time=timezone.localtime().time())
+        response = self.client.get(reverse('export_nutrition_data'))
+        self.assertNotContains(response, '999')
+        self.assertIn('attachment', response['Content-Disposition'])
+
+    def test_weight_dates_are_unique_per_user(self):
+        today = timezone.localdate()
+        WeightLog.objects.create(weight_log_id=1, user_id=self.user, weight_kg=70, log_date=today)
+        WeightLog.objects.create(weight_log_id=2, user_id=self.other, weight_kg=65, log_date=today)
+        self.assertEqual(WeightLog.objects.filter(log_date=today).count(), 2)
+
+    def test_recipe_can_be_logged_as_nutrition_snapshot(self):
+        recipe = Recipe.objects.create(recipe_id=10, name='Stew', prep_time_minutes=1, cook_time_minutes=1, total_time_minutes=2, servings=1, calories_per_serving=200, protein_per_serving=10, carbs_per_serving=20, fat_per_serving=5, fiber_per_serving=2, is_public=True)
+        response = self.client.post(reverse('log_recipe', args=[recipe.pk]), {'quantity': '1.5', 'meal_type': 'dinner', 'log_date': '2026-01-02', 'log_time': '19:30'})
+        self.assertRedirects(response, reverse('dashboard'))
+        log = FoodLog.objects.get(user_id=self.user)
+        self.assertEqual((log.calories_consumed, log.protein_consumed, log.fiber_consumed), (300, 15, 3))
+        self.assertEqual(log.food_id.user_id, self.user)
+
+    def test_automatic_milestones_and_week_navigation(self):
+        now = timezone.localtime()
+        FoodLog.objects.create(food_log_id=1, user_id=self.user, food_id=self.food, meal_type='breakfast', quantity=1, serving_unit='g', calories_consumed=2, protein_consumed=1, carbs_consumed=1, fat_consumed=1, log_date=now.date(), log_time=now.time())
+        response = self.client.get(reverse('achievements'))
+        self.assertTrue(next(b for b in response.context['automatic_badges'] if b['name'] == 'First Bite')['completed'])
+        response = self.client.get(reverse('meal_plan'), {'start': '2026-04-06'})
+        self.assertEqual(response.context['week_start'], date(2026, 4, 6))
+        self.assertEqual(len(response.context['week_days']), 7)
+
+    def test_shared_food_catalog_access_and_ownership(self):
+        shared = Food.objects.create(food_id=9, user_id=None, is_custom=False, name='Shared banana', serving_size=100, serving_unit='g', calories=89, protein=1, carbs=23, fat=0, fiber=2)
+        self.assertContains(self.client.get(reverse('food_search'), {'q': 'Shared banana'}), 'Shared banana')
+        self.assertEqual(self.client.get(reverse('log_food_portion', args=[shared.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse('model_record_edit', args=['foods', shared.pk])).status_code, 404)
+        self.assertEqual(self.client.post(reverse('food_delete', args=[shared.pk])).status_code, 404)
+        self.client.post(reverse('log_food_portion', args=[shared.pk]), {'quantity': '100', 'meal_type': 'snack', 'log_date': '2026-01-02', 'log_time': '12:00'})
+        self.assertTrue(FoodLog.objects.filter(user_id=self.user, food_id=shared).exists())

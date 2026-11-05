@@ -52,6 +52,9 @@
             </div>
         </div>
     </section>
+    <div class="badge-heading"><h2>Diary milestones</h2></div>
+    <p class="intro">Calculated from your current diary. Progress may change if entries or your water target change.</p>
+    <section class="badge-grid" aria-label="Automatic diary milestones">{% for badge in automatic_badges %}<article class="badge-item{% if badge.completed %} is-earned{% endif %}"><div class="badge-top"><span class="badge-icon" aria-hidden="true">{{ badge.icon }}</span><div class="badge-copy"><h3>{{ badge.name }}</h3><p>{{ badge.description }}</p></div></div><p class="badge-status">{% if badge.completed %}Earned{% else %}Progress {{ badge.progress }} / {{ badge.target }}{% endif %}</p><div class="badge-track" role="progressbar" aria-label="{{ badge.name }} progress" aria-valuenow="{{ badge.percentage }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ badge.percentage }}%"></span></div></article>{% endfor %}</section>
     <div class="badge-heading"><h2>Your badges</h2><span class="badge-count">{{ badges|length }} available</span></div>
     {% if badges %}
         <section class="badge-grid" aria-label="Achievement badges">

@@ -4,7 +4,8 @@ import json
 import re
 import uuid
 import calendar
-from datetime import timedelta
+import csv
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login as auth_login, logout as auth_logout
@@ -54,6 +55,8 @@ from DietApp.forms import (
     UserSettingForm,
     UsersForm,
     WaterLogForm,
+    PortionLogForm,
+    WaterAmountForm,
     WeightLogForm,
 )
 from DietApp.models import (
@@ -417,6 +420,7 @@ def Dashboard(request):
         daily_summary[f"{key}_progress"] = min(
             100, round(daily_summary[key] / target * 100)
         ) if target else 0
+    daily_summary["calories_remaining"] = max(0, targets["calories"] - daily_summary["calories"]) if targets["calories"] and targets["calories"] > 0 else None
     daily_summary["water_progress"] = min(
         100, round(water_ml / targets["water"] * 100)
     ) if targets["water"] else 0
@@ -1143,13 +1147,17 @@ def DietInformation(request):
     return _module_page(request, "Food Log", "Your food, hydration, and meal planning records.", groups, actions)
 
 
+def _visible_foods(user):
+    return Food.objects.filter(Q(user_id=user) | Q(user_id__isnull=True, is_custom=False))
+
+
 def FoodSearch(request):
     user, redirect_response = _get_logged_in_user(request)
     if redirect_response:
         return redirect_response
 
     query = request.GET.get("q", "").strip()
-    foods = Food.objects.filter(user_id=user).order_by("name")
+    foods = _visible_foods(user).order_by("name")
     recipes = Recipe.objects.filter(Q(user_id=user) | Q(is_public=True)).order_by("name")
     if query:
         foods = foods.filter(
@@ -1161,7 +1169,7 @@ def FoodSearch(request):
     return render(
         request,
         "food_search.html",
-        {"user": user, "query": query, "foods": foods, "recipes": recipes},
+        {"user": user, "query": query, "foods": foods, "recipes": recipes, "recent_logs": FoodLog.objects.filter(user_id=user).select_related("food_id").order_by("-log_date", "-log_time", "-pk")[:5]},
     )
 
 
@@ -1169,8 +1177,72 @@ def FoodDetail(request, record_id):
     user, redirect_response = _get_logged_in_user(request)
     if redirect_response:
         return redirect_response
-    food = get_object_or_404(Food, pk=record_id, user_id=user)
+    food = get_object_or_404(_visible_foods(user), pk=record_id)
     return render(request, "food_detail.html", {"user": user, "food": food})
+
+
+def LogFoodPortion(request, record_id):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    food = get_object_or_404(_visible_foods(user), pk=record_id)
+    now = timezone.localtime()
+    form = PortionLogForm(request.POST or None, initial={
+        "quantity": food.serving_size, "meal_type": "breakfast",
+        "log_date": now.date(), "log_time": now.strftime("%H:%M"),
+    })
+    if request.method == "POST" and form.is_valid():
+        if food.serving_size <= 0:
+            form.add_error(None, "This food has an invalid serving size. Please edit it before logging.")
+        else:
+            data = form.cleaned_data
+            ratio = float(data["quantity"]) / food.serving_size
+            FoodLog.objects.create(
+                user_id=user, food_id=food, quantity=float(data["quantity"]),
+                serving_unit=food.serving_unit, meal_type=data["meal_type"],
+                log_date=data["log_date"], log_time=data["log_time"], notes=data["notes"],
+                calories_consumed=round(food.calories * ratio),
+                protein_consumed=round(food.protein * ratio, 2),
+                carbs_consumed=round(food.carbs * ratio, 2),
+                fat_consumed=round(food.fat * ratio, 2),
+                fiber_consumed=round(food.fiber * ratio, 2),
+            )
+            messages.success(request, "Meal added to your food diary.")
+            return redirect("dashboard")
+    return render(request, "portion_log.html", {"food": food, "form": form})
+
+
+def WaterTracker(request):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    today = timezone.localdate()
+    form = WaterAmountForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        now = timezone.localtime()
+        WaterLog.objects.create(user_id=user, amount_ml=form.cleaned_data["amount_ml"],
+                                log_date=now.date(), log_time=now.time())
+        messages.success(request, "Water added.")
+        return redirect("water_tracker")
+    logs = WaterLog.objects.filter(user_id=user, log_date=today).order_by("-log_time", "-pk")
+    total = logs.aggregate(total=Sum("amount_ml"))["total"] or 0
+    profile = _profile_for_user(user)
+    target = profile.daily_water_target if profile else None
+    return render(request, "water_tracker.html", {
+        "form": form, "logs": logs, "total": total, "target": target,
+        "percent": min(100, round(total / target * 100)) if target and target > 0 else 0,
+    })
+
+
+@require_POST
+def DeleteWaterLog(request, record_id):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    log = get_object_or_404(WaterLog, pk=record_id, user_id=user)
+    log.delete()
+    messages.success(request, "Water entry removed.")
+    return redirect("water_tracker")
 
 
 def RecipeDetail(request, record_id):
@@ -1194,6 +1266,15 @@ def MealPlanPage(request):
     if redirect_response:
         return redirect_response
     today = timezone.localdate()
+    try:
+        start = date.fromisoformat(request.GET.get("start", ""))
+    except (ValueError, TypeError):
+        start = today - timedelta(days=today.weekday())
+    # Keep week navigation bounded, including dates for which previous/next links are safe.
+    if not date(2, 1, 1) <= start <= date(9998, 12, 1):
+        start = today - timedelta(days=today.weekday())
+    week_plans = list(MealPlan.objects.filter(user_id=user, plan_date__range=(start, start + timedelta(days=6))).select_related("recipe_id").order_by("plan_date", "meal_type"))
+    days = [{"date": start + timedelta(days=offset), "plans": [plan for plan in week_plans if plan.plan_date == start + timedelta(days=offset)]} for offset in range(7)]
     plans = MealPlan.objects.filter(user_id=user, plan_date__gte=today).order_by(
         "plan_date", "meal_type"
     )
@@ -1202,6 +1283,8 @@ def MealPlanPage(request):
         "meal_plan.html",
         {
             "user": user,
+            "week_days": days, "week_start": start,
+            "previous_week": start - timedelta(days=7), "next_week": start + timedelta(days=7),
             "plans": _detail_records(
                 plans,
                 ("plan_date", "meal_type", "recipe_id", "custom_meal_name", "custom_meal_calories", "notes"),
@@ -1209,6 +1292,139 @@ def MealPlanPage(request):
             ),
         },
     )
+
+
+def LogRecipe(request, record_id):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    recipe = get_object_or_404(Recipe.objects.filter(Q(user_id=user) | Q(is_public=True)), pk=record_id)
+    now = timezone.localtime()
+    form = PortionLogForm(request.POST or None, initial={"quantity": 1, "meal_type": "breakfast", "log_date": now.date(), "log_time": now.strftime("%H:%M")})
+    form.fields["quantity"].label = "Number of servings"
+    form.fields["quantity"].help_text = "Nutrition is calculated per recipe serving."
+    if request.method == "POST" and form.is_valid():
+        d = form.cleaned_data
+        ratio = float(d["quantity"])
+        with transaction.atomic():
+            # Keep a food snapshot for the existing diary schema; past logs retain their totals.
+            food = Food.objects.create(food_id=(Food.objects.aggregate(max_id=Max("food_id"))["max_id"] or 0) + 1, user_id=user, name=recipe.name, brand="Recipe", serving_size=1, serving_unit="serving", calories=recipe.calories_per_serving, protein=recipe.protein_per_serving, carbs=recipe.carbs_per_serving, fat=recipe.fat_per_serving, fiber=recipe.fiber_per_serving, is_custom=True)
+            FoodLog.objects.create(user_id=user, food_id=food, meal_type=d["meal_type"], quantity=ratio, serving_unit="serving", calories_consumed=round(recipe.calories_per_serving * ratio), protein_consumed=round(recipe.protein_per_serving * ratio, 2), carbs_consumed=round(recipe.carbs_per_serving * ratio, 2), fat_consumed=round(recipe.fat_per_serving * ratio, 2), fiber_consumed=round(recipe.fiber_per_serving * ratio, 2), log_date=d["log_date"], log_time=d["log_time"], notes=d["notes"])
+        messages.success(request, "Recipe added to your food diary.")
+        return redirect("dashboard")
+    return render(request, "recipe_log.html", {"recipe": recipe, "form": form})
+
+
+@require_POST
+def GenerateMealPlan(request):
+    """Fill empty slots for the next seven days; never replace existing plans."""
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    profile = _profile_for_user(user)
+    preferences = profile.dietary_preferences if profile and isinstance(profile.dietary_preferences, list) else []
+    wanted = {str(p).strip().casefold().replace("-", "_").replace(" ", "_") for p in preferences} - {"none", ""}
+    recipes = list(Recipe.objects.filter(Q(user_id=user) | Q(is_public=True)))
+    def matches(recipe):
+        tags = recipe.dietary_tags if isinstance(recipe.dietary_tags, list) else []
+        tags = {str(tag).strip().casefold().replace("-", "_").replace(" ", "_") for tag in tags}
+        return wanted.issubset(tags)
+    recipes = [recipe for recipe in recipes if matches(recipe) and recipe.calories_per_serving > 0]
+    if not recipes:
+        messages.error(request, "No accessible recipes match all your dietary preferences. Add recipes with matching dietary tags first.")
+        return redirect("meal_plan")
+    target = profile.daily_calorie_target if profile and profile.daily_calorie_target and profile.daily_calorie_target > 0 else 2000
+    today = timezone.localdate()
+    try:
+        today = date.fromisoformat(request.POST.get("start", "")) if request.POST.get("start") else today
+    except ValueError:
+        messages.error(request, "Choose a valid start date.")
+        return redirect("meal_plan")
+    if not date(2, 1, 1) <= today <= date(9998, 12, 1):
+        messages.error(request, "Choose a date in the supported range.")
+        return redirect("meal_plan")
+    shares = (("breakfast", .225), ("lunch", .325), ("dinner", .325), ("snack", .125))
+    created = 0
+    with transaction.atomic():
+        existing = set(MealPlan.objects.filter(user_id=user, plan_date__range=(today, today + timedelta(days=6))).values_list("plan_date", "meal_type"))
+        for day in range(7):
+            plan_date = today + timedelta(days=day)
+            for meal_type, share in shares:
+                if (plan_date, meal_type) in existing:
+                    continue
+                # Rotate similarly sized choices so the same recipe is not always selected.
+                ranked = sorted(recipes, key=lambda r: (abs(r.calories_per_serving - target * share), r.pk))
+                closest = ranked[:min(3, len(ranked))]
+                recipe = closest[day % len(closest)]
+                MealPlan.objects.create(user_id=user, plan_date=plan_date, meal_type=meal_type, recipe_id=recipe)
+                created += 1
+    messages.success(request, f"Added {created} meals to empty slots for the next seven days. Existing plans were kept." + (" Set a calorie goal for a more personal plan." if target == 2000 and not (profile and profile.daily_calorie_target) else ""))
+    return redirect(reverse("meal_plan") + "?start=" + today.isoformat())
+
+
+@require_POST
+def RecalculateTargets(request):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    profile = _profile_for_user(user)
+    if not profile or not profile.age or profile.age < 18 or not profile.weight_kg or not profile.height_cm or profile.weight_kg <= 0 or profile.height_cm <= 0 or profile.gender not in ("M", "F") or profile.activity_level not in ("sedentary", "light", "moderate", "active", "very_active"):
+        messages.error(request, "Enter adult age, positive height and weight, activity level, and a male or female calculation profile before estimating targets. For other profiles or minors, set targets with a clinician.")
+        return redirect("goals")
+    weight, height = float(profile.weight_kg), float(profile.height_cm)
+    if profile.gender == "M":
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * profile.age
+    else:
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.330 * profile.age
+    factor = {"sedentary": 1.2, "light": 1.375, "moderate": 1.55, "active": 1.725, "very_active": 1.9}[profile.activity_level]
+    calories = round(bmr * factor + {"lose": -300, "gain": 300, "muscle": 300}.get(profile.health_goal, 0))
+    if calories < 1200 or calories > 6000:
+        messages.error(request, "The calculated estimate is outside the supported range. Please check your measurements and discuss targets with a clinician.")
+        return redirect("goals")
+    profile.daily_calorie_target = calories
+    profile.daily_carbs_target = round(calories * .5 / 4)
+    profile.daily_protein_target = round(calories * .2 / 4)
+    profile.daily_fat_target = round(calories * .3 / 9)
+    profile.updated_at = timezone.localdate()
+    profile.save(update_fields=["daily_calorie_target", "daily_carbs_target", "daily_protein_target", "daily_fat_target", "updated_at"])
+    messages.success(request, "Estimated targets updated. These are general estimates, not medical advice; your water target was unchanged.")
+    return redirect("goals")
+
+
+@require_POST
+def ToggleRecipeFavorite(request, record_id):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    recipe = get_object_or_404(Recipe.objects.filter(Q(user_id=user) | Q(is_public=True)), pk=record_id)
+    favorites = FavoriteRecipe.objects.filter(user_id=user, recipe_id=recipe)
+    if favorites.exists():
+        favorites.delete()
+        messages.success(request, "Recipe removed from favorites.")
+    else:
+        FavoriteRecipe.objects.create(user_id=user, recipe_id=recipe)
+        messages.success(request, "Recipe saved to favorites.")
+    return redirect("recipe_detail", record_id=record_id)
+
+
+def ExportNutritionData(request):
+    user, redirect_response = _get_logged_in_user(request)
+    if redirect_response:
+        return redirect_response
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="nutrition-data.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["type", "date", "time", "description", "amount", "unit", "calories", "protein_g", "carbs_g", "fat_g", "notes"])
+    def safe(value):
+        value = str(value or "")
+        return "'" + value if value.lstrip().startswith(("=", "+", "-", "@")) else value
+    for log in FoodLog.objects.filter(user_id=user).select_related("food_id").order_by("log_date", "log_time"):
+        writer.writerow(["food", log.log_date, log.log_time, safe(log.food_id.name), log.quantity, safe(log.serving_unit), log.calories_consumed, log.protein_consumed, log.carbs_consumed, log.fat_consumed, safe(log.notes)])
+    for log in WaterLog.objects.filter(user_id=user).order_by("log_date", "log_time"):
+        writer.writerow(["water", log.log_date, log.log_time, "Water", log.amount_ml, "ml", "", "", "", "", ""])
+    for log in WeightLog.objects.filter(user_id=user).order_by("log_date"):
+        writer.writerow(["weight", log.log_date, "", "Weight", log.weight_kg, "kg", "", "", "", "", safe(log.notes)])
+    return response
 
 
 def Goals(request):
@@ -1227,6 +1443,38 @@ def Goals(request):
         [{"title": "Targets", "records": records}],
         [{"label": "Edit Goal" if profile else "Add Goal", "url": reverse("goals_edit")}],
     )
+
+
+def _longest_day_run(days):
+    longest = run = 0
+    previous = None
+    for day in sorted(set(days)):
+        run = run + 1 if previous and day == previous + timedelta(days=1) else 1
+        longest = max(longest, run)
+        previous = day
+    return longest
+
+
+def _automatic_milestones(user, today):
+    """Calculate milestones from the user's diary; deleting entries can change progress."""
+    logs = FoodLog.objects.filter(user_id=user, log_date__lte=today)
+    meal_days = list(logs.values_list("log_date", flat=True).distinct())
+    breakfast_days = list(logs.filter(meal_type="breakfast").values_list("log_date", flat=True).distinct())
+    early_days = list(logs.filter(meal_type="breakfast", log_time__lt="08:00").values_list("log_date", flat=True).distinct())
+    meal_run = _longest_day_run(meal_days)
+    profile = _profile_for_user(user)
+    water_target = profile.daily_water_target if profile else None
+    water_days = []
+    if water_target and water_target > 0:
+        water_days = list(WaterLog.objects.filter(user_id=user, log_date__lte=today).values("log_date").annotate(total=Sum("amount_ml")).filter(total__gte=water_target).values_list("log_date", flat=True))
+    specs = [
+        ("First Bite", "Log your first meal.", "🍽️", min(1, logs.count()), 1),
+        ("Breakfast Club", "Log breakfast seven days in a row.", "🥣", _longest_day_run(breakfast_days), 7),
+        ("Water Warrior", "Reach your current water target seven days in a row. Set a target in Goals first.", "💧", _longest_day_run(water_days), 7),
+        ("Consistency Champion", "Log a meal 30 days in a row.", "🔥", meal_run, 30),
+        ("Early Bird", "Log breakfast before 8am seven days in a row.", "☀️", _longest_day_run(early_days), 7),
+    ]
+    return [{"name": name, "description": description, "icon": icon, "progress": min(progress, target), "target": target, "completed": progress >= target, "percentage": min(100, round(progress * 100 / target))} for name, description, icon, progress, target in specs]
 
 
 def Achievements(request):
@@ -1277,7 +1525,7 @@ def Achievements(request):
     return render(
         request,
         "achievements.html",
-        {"user": user, "badges": badges, "streak": streak},
+        {"user": user, "badges": badges, "streak": streak, "automatic_badges": _automatic_milestones(user, timezone.localdate())},
     )
 
 
@@ -1426,11 +1674,9 @@ def ModelFormPage(request, model_slug):
             user_field.disabled = True
 
     if model_slug in {"food-logs", "recipe-ingredients"} and "food_id" in form.fields:
-        form.fields["food_id"].queryset = Food.objects.filter(user_id=user)
+        form.fields["food_id"].queryset = _visible_foods(user)
         if model_slug == "food-logs" and request.method == "GET":
-            selected_food = Food.objects.filter(
-                user_id=user, pk=request.GET.get("food_id")
-            ).first()
+            selected_food = _visible_foods(user).filter(pk=request.GET.get("food_id")).first()
             if selected_food:
                 form.initial["food_id"] = selected_food
     if model_slug in {"meal-plans", "recipe-ingredients", "favorite-recipes"} and "recipe_id" in form.fields:
@@ -1544,14 +1790,14 @@ def ModelRecordEditPage(request, model_slug, record_id):
     primary_key_name = model._meta.pk.name
     form.fields.pop(primary_key_name, None)
     if model_slug == "food-logs" and "food_id" in form.fields:
-        form.fields["food_id"].queryset = Food.objects.filter(user_id=user)
+        form.fields["food_id"].queryset = _visible_foods(user)
     if model_slug == "meal-plans" and "recipe_id" in form.fields:
         form.fields["recipe_id"].queryset = Recipe.objects.filter(Q(user_id=user) | Q(is_public=True))
     if model_slug == "recipe-ingredients":
         if "recipe_id" in form.fields:
             form.fields["recipe_id"].queryset = Recipe.objects.filter(user_id=user)
         if "food_id" in form.fields:
-            form.fields["food_id"].queryset = Food.objects.filter(user_id=user)
+            form.fields["food_id"].queryset = _visible_foods(user)
 
     if request.method == "POST":
         if form.is_valid():
