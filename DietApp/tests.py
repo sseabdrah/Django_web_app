@@ -610,9 +610,10 @@ class ModelFormPageTests(TestCase):
 		existing_models = set(apps.get_app_config("DietApp").get_models())
 		registered_models = {form_class._meta.model for _, form_class in MODEL_FORM_REGISTRY.values()}
 		self.assertTrue(registered_models.issubset(existing_models))
+		from DietApp.models import RecipeReview, ShoppingItem, ReminderDelivery
 		self.assertSetEqual(
 			existing_models - registered_models,
-			{SupportFeedback, SupportQuestion, SubscriptionPayment},
+			{SupportFeedback, SupportQuestion, SubscriptionPayment, RecipeReview, ShoppingItem, ReminderDelivery},
 		)
 
 	def test_form_index_and_all_user_form_pages_render(self):
@@ -1241,3 +1242,83 @@ class NutritionWorkflowTests(TestCase):
         self.assertEqual(self.client.post(reverse('food_delete', args=[shared.pk])).status_code, 404)
         self.client.post(reverse('log_food_portion', args=[shared.pk]), {'quantity': '100', 'meal_type': 'snack', 'log_date': '2026-01-02', 'log_time': '12:00'})
         self.assertTrue(FoodLog.objects.filter(user_id=self.user, food_id=shared).exists())
+
+    def test_recipe_reviews_validation_update_and_private_access(self):
+        from DietApp.models import RecipeReview
+        public = Recipe.objects.create(recipe_id=15, name='Soup', prep_time_minutes=1, cook_time_minutes=1, total_time_minutes=2, servings=1, calories_per_serving=100, protein_per_serving=1, carbs_per_serving=1, fat_per_serving=1, is_public=True)
+        private = Recipe.objects.create(recipe_id=16, name='Private', prep_time_minutes=1, cook_time_minutes=1, total_time_minutes=2, servings=1, calories_per_serving=100, protein_per_serving=1, carbs_per_serving=1, fat_per_serving=1, is_public=False, user_id=self.other)
+        url = reverse('save_recipe_review', args=[public.pk])
+        self.assertEqual(self.client.post(url, {'rating': 6, 'comment': 'bad'}).status_code, 400)
+        self.assertFalse(RecipeReview.objects.exists())
+        self.client.post(url, {'rating': 4, 'comment': 'Good'})
+        self.client.post(url, {'rating': 5, 'comment': 'Great'})
+        self.assertEqual(RecipeReview.objects.count(), 1)
+        self.assertEqual(RecipeReview.objects.get().rating, 5)
+        self.assertContains(self.client.get(reverse('recipe_detail', args=[public.pk])), 'Great')
+        self.assertEqual(self.client.post(reverse('save_recipe_review', args=[private.pk]), {'rating': 5}).status_code, 404)
+
+    def test_shopping_list_selection_and_user_isolation(self):
+        from DietApp.models import RecipeIngredient, ShoppingItem
+        recipe = Recipe.objects.create(recipe_id=20, name='Soup', prep_time_minutes=1, cook_time_minutes=1, total_time_minutes=2, servings=1, calories_per_serving=100, protein_per_serving=1, carbs_per_serving=1, fat_per_serving=1, is_public=True)
+        ingredient = RecipeIngredient.objects.create(recipe_ingredients_id=1, recipe_id=recipe, ingredient_name='Tomato', quantity=2, unit='piece')
+        url = reverse('add_ingredients', args=[recipe.pk])
+        self.assertEqual(self.client.post(url, {'ingredients': ['999']}).status_code, 404)
+        self.client.post(url, {'ingredients': [str(ingredient.pk)]})
+        item = ShoppingItem.objects.get(user=self.user)
+        self.assertEqual(item.name, 'Tomato')
+        other_item = ShoppingItem.objects.create(user=self.other, name='Private item')
+        self.assertNotContains(self.client.get(reverse('shopping_list')), 'Private item')
+        self.assertEqual(self.client.post(reverse('update_shopping_item', args=[other_item.pk]), {'action': 'delete'}).status_code, 404)
+        self.client.post(reverse('update_shopping_item', args=[item.pk]), {'action': 'toggle'})
+        item.refresh_from_db()
+        self.assertTrue(item.checked)
+
+    @override_settings(TIME_ZONE='UTC')
+    def test_scheduled_reminders_deduplicate_and_respect_opt_out(self):
+        from datetime import datetime, timezone as dt_timezone
+        from django.core.management import call_command
+        from DietApp.models import Reminder, ReminderDelivery, UserSetting
+        now = datetime(2026, 11, 8, 8, 0, tzinfo=dt_timezone.utc)
+        Reminder.objects.create(reminder_id=1, user_id=self.user, reminder_type='breakfast', is_enabled=True, time=time(8))
+        Reminder.objects.create(reminder_id=2, user_id=self.other, reminder_type='breakfast', is_enabled=True, time=time(8))
+        UserSetting.objects.create(user_id=self.other, notification_enabled=False)
+        with patch('DietApp.management.commands.send_nutrition_reminders.timezone.now', return_value=now), patch('DietApp.management.commands.send_nutrition_reminders.send_mail', return_value=1) as send:
+            call_command('send_nutrition_reminders')
+            call_command('send_nutrition_reminders')
+        self.assertEqual(send.call_count, 1)
+        self.assertEqual(ReminderDelivery.objects.count(), 1)
+        self.assertEqual(send.call_args.args[3], [self.user.email])
+
+    def test_water_reminder_schedule(self):
+        from datetime import datetime, timezone as dt_timezone
+        from DietApp.models import Reminder
+        from DietApp.management.commands.send_nutrition_reminders import reminder_due
+        reminder = Reminder(reminder_type='water', interval_minutes=60, start_time=time(8), end_time=time(10))
+        self.assertTrue(reminder_due(reminder, datetime(2026, 11, 8, 9, 0, tzinfo=dt_timezone.utc)))
+        self.assertFalse(reminder_due(reminder, datetime(2026, 11, 8, 9, 30, tzinfo=dt_timezone.utc)))
+        self.assertFalse(reminder_due(reminder, datetime(2026, 11, 8, 11, 0, tzinfo=dt_timezone.utc)))
+
+    def test_reminder_failure_can_be_retried_and_weekly_is_sunday(self):
+        from datetime import datetime, timezone as dt_timezone
+        from django.core.management import call_command
+        from DietApp.models import Reminder, ReminderDelivery
+        from DietApp.management.commands.send_nutrition_reminders import reminder_due
+        sunday = datetime(2026, 11, 8, 8, 0, tzinfo=dt_timezone.utc)
+        weekly = Reminder.objects.create(reminder_id=9, user_id=self.user, reminder_type='weekly', time=time(8), is_enabled=True)
+        self.assertTrue(reminder_due(weekly, sunday))
+        self.assertFalse(reminder_due(weekly, sunday - timedelta(days=1)))
+        with patch('DietApp.management.commands.send_nutrition_reminders.timezone.now', return_value=sunday), patch('DietApp.management.commands.send_nutrition_reminders.send_mail', side_effect=[RuntimeError('unavailable'), 1]) as send:
+            call_command('send_nutrition_reminders')
+            self.assertFalse(ReminderDelivery.objects.exists())
+            call_command('send_nutrition_reminders')
+        self.assertEqual(send.call_count, 2)
+        self.assertIsNotNone(ReminderDelivery.objects.get().sent_at)
+
+    def test_weight_goal_and_night_owl_milestones(self):
+        today = timezone.localdate()
+        UserProfile.objects.create(user_id=self.user, health_goal='lose', goal_weight_kg=65, updated_at=today)
+        WeightLog.objects.create(weight_log_id=1, user_id=self.user, weight_kg=64, log_date=today)
+        FoodLog.objects.create(food_log_id=1, user_id=self.user, food_id=self.food, meal_type='dinner', quantity=1, serving_unit='g', calories_consumed=2, protein_consumed=1, carbs_consumed=1, fat_consumed=1, log_date=today, log_time=time(20, 30))
+        badges = {b['name']: b for b in self.client.get(reverse('achievements')).context['automatic_badges']}
+        self.assertTrue(badges['Weight Milestone']['completed'])
+        self.assertTrue(badges['Night Owl']['completed'])

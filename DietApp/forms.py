@@ -12,6 +12,8 @@ from DietApp.models import (
     MealPlan,
     Recipe,
     RecipeIngredient,
+    RecipeReview,
+    ShoppingItem,
     Reminder,
     SupportFeedback,
     SupportQuestion,
@@ -273,6 +275,7 @@ class GoalsForm(ModelForm):
         model = UserProfile
         fields = (
             "health_goal",
+            "goal_weight_kg",
             "daily_calorie_target",
             "daily_protein_target",
             "daily_carbs_target",
@@ -345,6 +348,23 @@ class ReminderForm(ModelForm):
     class Meta:
         model = Reminder
         fields = "__all__"
+        widgets = {field: forms.TimeInput(attrs={"type": "time"}) for field in ("time", "start_time", "end_time")}
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("is_enabled"):
+            return data
+        if data.get("reminder_type") == "water":
+            interval, start, end = data.get("interval_minutes"), data.get("start_time"), data.get("end_time")
+            if not interval or not 1 <= interval <= 1440:
+                self.add_error("interval_minutes", "Enter an interval from 1 to 1440 minutes.")
+            if not start or not end:
+                raise forms.ValidationError("Enter a start and end time for water reminders.")
+            if start >= end:
+                raise forms.ValidationError("The water reminder end time must be later than its start time on the same day.")
+        elif not data.get("time"):
+            self.add_error("time", "Choose a time for this reminder.")
+        return data
 
 
 RemindersForm = ReminderForm
@@ -371,3 +391,18 @@ class PortionLogForm(forms.Form):
 
 class WaterAmountForm(forms.Form):
     amount_ml = forms.IntegerField(label="Amount (ml)", min_value=1, max_value=10000)
+
+
+class RecipeReviewForm(forms.ModelForm):
+    rating = forms.TypedChoiceField(choices=[(i, f"{i} / 5") for i in range(1, 6)], coerce=int)
+    class Meta:
+        model = RecipeReview
+        fields = ("rating", "comment")
+        widgets = {"comment": forms.Textarea(attrs={"rows": 3})}
+
+
+class ShoppingItemForm(forms.ModelForm):
+    quantity = forms.FloatField(required=False, min_value=0.01, max_value=100000)
+    class Meta:
+        model = ShoppingItem
+        fields = ("name", "quantity", "unit")

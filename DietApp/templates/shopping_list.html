@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Shopping list - Diet Services{% endblock %}
+{% block content %}
+<h1>Shopping list</h1><p class="intro">Keep ingredients and other items together for your next shop.</p>
+<section class="panel"><h2>Your items</h2>{% for item in items %}<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:10px 0"><span style="flex:1;{% if item.checked %}text-decoration:line-through{% endif %}">{{ item.name }} {% if item.quantity %}· {{ item.quantity }} {{ item.unit }}{% endif %}</span><form method="post" action="{% url 'update_shopping_item' item.pk %}">{% csrf_token %}<button name="action" value="toggle" type="submit">{% if item.checked %}Undo{% else %}Mark bought{% endif %}</button></form><form method="post" action="{% url 'update_shopping_item' item.pk %}">{% csrf_token %}<button name="action" value="delete" type="submit">Remove</button></form></div>{% empty %}<p class="empty">Your list is empty.</p>{% endfor %}</section>
+<section class="panel"><h2>Add an item</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Add item</button></form></section>
+<a class="action secondary" href="{% url 'meal_plan' %}">Back to meal plan</a>
+{% endblock %}

@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 # Create your models here.
 
@@ -45,6 +47,7 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=10, choices=gender_choices, blank=True, null=True)
     weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     height_cm = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    goal_weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0.01"))])
     activity_level = models.CharField(max_length=20, choices=activity_level_choices, blank=True, null=True)
     dietary_preferences = models.JSONField(default=list, blank=True)
     health_goal = models.CharField(max_length=20, choices=health_goal_choices, blank=True, null=True)
@@ -197,8 +200,10 @@ class Reminder(models.Model):
         ('breakfast', 'Breakfast'),
         ('lunch', 'Lunch'),
         ('dinner', 'Dinner'),
+        ('snack', 'Snack'),
         ('water', 'Water'),
         ('weekly', 'Weekly Report'),
+        ('quote', 'Daily motivation'),
     ]
 
     reminder_id = models.IntegerField(null=False, primary_key=True)
@@ -319,3 +324,35 @@ class SubscriptionPayment(models.Model):
 
     def __str__(self):
         return f"{self.tx_ref} · {self.get_status_display()}"
+
+class RecipeReview(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveSmallIntegerField()
+    comment = models.CharField(max_length=1000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "recipe"], name="unique_recipe_review_per_user"),
+            models.CheckConstraint(condition=models.Q(rating__gte=1, rating__lte=5), name="recipe_review_rating_range"),
+        ]
+
+
+class ShoppingItem(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    quantity = models.FloatField(null=True, blank=True)
+    unit = models.CharField(max_length=50, blank=True)
+    checked = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ReminderDelivery(models.Model):
+    reminder = models.ForeignKey(Reminder, on_delete=models.CASCADE)
+    scheduled_for = models.DateTimeField()
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["reminder", "scheduled_for"], name="unique_reminder_delivery_slot")]

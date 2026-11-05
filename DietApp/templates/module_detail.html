@@ -9,7 +9,7 @@
         {% for action in actions %}<a class="action" href="{{ action.url }}">{{ action.label }}</a>{% endfor %}
     </div>
     {% if title == "Goals" %}<section class="panel"><h2>Estimate your targets</h2><p>Use your profile measurements and activity level to estimate calories and a 50/20/30 carbohydrate, protein and fat split. Estimates are not medical advice; review them with a qualified professional.</p><form method="post" action="{% url 'recalculate_targets' %}">{% csrf_token %}<button type="submit">Recalculate targets</button></form></section>{% endif %}
-    {% if title == "Settings" %}<section class="panel"><h2>About reminders</h2><p>Reminder preferences are saved, but notifications are not sent yet. Delivery requires a configured scheduling and notification service.</p></section><section class="panel"><h2>Your data</h2><p>Download your food, water and weight logs as a CSV file.</p><a class="action secondary" href="{% url 'export_nutrition_data' %}">Export logs</a></section>{% endif %}
+    {% if title == "Settings" %}<section class="panel"><h2>About reminders</h2><p>Email reminders require the server administrator to configure email and run the reminder scheduler. Times use the server time zone. Weekly reminders are sent on Sundays.</p></section><section class="panel"><h2>Your data</h2><p>Download your food, water and weight logs as a CSV file.</p><a class="action secondary" href="{% url 'export_nutrition_data' %}">Export logs</a></section>{% endif %}
     {% for group in groups %}
         <section class="panel" aria-labelledby="group-{{ forloop.counter }}">
             <h2 id="group-{{ forloop.counter }}">{{ group.title }}</h2>
