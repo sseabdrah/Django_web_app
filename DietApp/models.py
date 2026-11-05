@@ -61,8 +61,11 @@ class WeightLog(models.Model):
     weight_log_id = models.IntegerField(null=False, primary_key=True)  # fixed typo
     user_id = models.ForeignKey(Users, on_delete=models.RESTRICT)
     weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=False)
-    log_date = models.DateField(unique=True)
+    log_date = models.DateField()
     notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user_id", "log_date"], name="unique_weight_log_per_user_date")]
 
 
 # 4. foods
@@ -78,7 +81,7 @@ class Food(models.Model):
     fat = models.FloatField()
     fiber = models.FloatField(default=0)
     is_custom = models.BooleanField(default=False)
-    user_id = models.ForeignKey(Users, on_delete=models.RESTRICT)
+    user_id = models.ForeignKey(Users, on_delete=models.RESTRICT, null=True, blank=True)
     barcode = models.CharField(max_length=50, null=True, blank=True)
 
 

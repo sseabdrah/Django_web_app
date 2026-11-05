@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Log {{ recipe.name }} - Diet Services{% endblock %}
+{% block content %}
+<h1>Log {{ recipe.name }}</h1>
+<p class="intro">Per serving: {{ recipe.calories_per_serving }} kcal · {{ recipe.protein_per_serving }}g protein · {{ recipe.carbs_per_serving }}g carbs · {{ recipe.fat_per_serving }}g fat · {{ recipe.fiber_per_serving }}g fiber.</p>
+<section class="panel"><p>A food snapshot will be added to your library so the diary can keep this recipe's nutrition information.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Log meal</button></form></section>
+<a class="action secondary" href="{% url 'recipe_detail' recipe.pk %}">Back to recipe</a>
+{% endblock %}

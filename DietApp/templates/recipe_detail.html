@@ -9,6 +9,9 @@
             <div><dt>Protein</dt><dd>{{ recipe.protein_per_serving|floatformat:1 }} g</dd></div>
             <div><dt>Carbohydrates</dt><dd>{{ recipe.carbs_per_serving|floatformat:1 }} g</dd></div>
             <div><dt>Fat</dt><dd>{{ recipe.fat_per_serving|floatformat:1 }} g</dd></div>
+            <div><dt>Fiber</dt><dd>{{ recipe.fiber_per_serving|floatformat:1 }} g</dd></div>
+            <div><dt>Prep time</dt><dd>{{ recipe.prep_time_minutes }} minutes</dd></div>
+            <div><dt>Cook time</dt><dd>{{ recipe.cook_time_minutes }} minutes</dd></div>
             <div><dt>Servings</dt><dd>{{ recipe.servings }}</dd></div>
             <div><dt>Total time</dt><dd>{{ recipe.total_time_minutes }} minutes</dd></div>
             {% if recipe.dietary_tags %}<div><dt>Dietary tags</dt><dd>{{ recipe.dietary_tags|join:", " }}</dd></div>{% endif %}
@@ -22,5 +25,5 @@
         <h2 id="recipe-instructions-title">Instructions</h2>
         {% if recipe.instructions %}<ol>{% for instruction in recipe.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>{% else %}<p class="empty">No instructions have been added yet.</p>{% endif %}
     </section>
-    <div class="action-row"><a class="action" href="{% url 'model_form' 'meal-plans' %}?recipe_id={{ recipe.pk }}">Add to meal plan</a>{% if not is_favorite %}<a class="action secondary" href="{% url 'model_form' 'favorite-recipes' %}">Save to favorites</a>{% endif %}<a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
+    <div class="action-row"><a class="action" href="{% url 'log_recipe' recipe.pk %}">Log this meal</a><a class="action" href="{% url 'model_form' 'meal-plans' %}?recipe_id={{ recipe.pk }}">Add to meal plan</a><form method="post" action="{% url 'toggle_recipe_favorite' recipe.pk %}">{% csrf_token %}<button type="submit">{% if is_favorite %}Remove from favorites{% else %}Save recipe{% endif %}</button></form><a class="action secondary" href="{% url 'food_search' %}">Back to Explore</a></div>
 {% endblock %}

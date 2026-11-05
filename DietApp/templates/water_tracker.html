@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Water intake - Diet Services{% endblock %}
+{% block content %}
+<h1>Water intake</h1><p class="intro">Stay hydrated, one glass at a time.</p>
+<section class="panel"><h2>Today</h2><p><strong>{{ total }} ml</strong>{% if target %} / {{ target }} ml{% endif %}</p>
+{% if target %}<progress value="{{ percent }}" max="100" aria-label="Water target progress">{{ percent }}%</progress><p>{{ percent }}% of your target</p>{% else %}<p><a href="{% url 'goals_edit' %}">Set a water target</a> to see your progress.</p>{% endif %}
+<div class="action-row">
+<form method="post">{% csrf_token %}<input type="hidden" name="amount_ml" value="250"><button type="submit">+ 250 ml</button></form>
+<form method="post">{% csrf_token %}<input type="hidden" name="amount_ml" value="500"><button type="submit">+ 500 ml</button></form>
+<form method="post">{% csrf_token %}<input type="hidden" name="amount_ml" value="750"><button type="submit">+ 750 ml</button></form></div>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Add custom amount</button></form></section>
+<section class="panel"><h2>Today's history</h2>{% for log in logs %}<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid var(--line);padding:10px 0"><span>{{ log.amount_ml }} ml · {{ log.log_time|time:"H:i" }}</span><form method="post" action="{% url 'water_log_delete' log.pk %}">{% csrf_token %}<button type="submit" aria-label="Delete {{ log.amount_ml }} ml entry at {{ log.log_time|time:'H:i' }}">Delete</button></form></div>{% empty %}<p class="empty">No water logged today.</p>{% endfor %}</section>
+{% endblock %}

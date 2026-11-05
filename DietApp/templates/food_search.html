@@ -2,7 +2,7 @@
 {% block title %}Explore Food &amp; Recipes - Diet Services{% endblock %}
 {% block content %}
     <h1>Explore</h1>
-    <p class="intro">Search your food library by name, brand, or barcode, and find recipes to plan.</p>
+    <p class="intro">Search your foods and the shared food library by name, brand, or barcode, and find recipes to plan.</p>
     <section class="panel">
         <form method="get" role="search">
             <label for="food-query">Food or recipe</label>
@@ -12,6 +12,7 @@
             </div>
         </form>
     </section>
+    {% if recent_logs %}<section class="panel"><h2>Recently logged</h2><div class="action-row">{% for log in recent_logs %}<a class="action secondary" href="{% url 'log_food_portion' log.food_id.pk %}">{{ log.food_id.name }} · {{ log.food_id.calories }} kcal</a>{% endfor %}</div></section>{% endif %}
     <section class="panel" aria-labelledby="food-results-title">
         <h2 id="food-results-title">Foods</h2>
         {% if foods %}
@@ -20,7 +21,7 @@
                     <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto auto; align-items:center; gap:12px; padding:13px 0; border-top:1px solid var(--line);">
                         <div><strong>{{ food.name }}</strong>{% if food.brand %}<span> · {{ food.brand }}</span>{% endif %}<div class="helptext">{{ food.calories }} kcal · {{ food.protein|floatformat:0 }}g protein per {{ food.serving_size }} {{ food.serving_unit }}</div></div>
                         <a href="{% url 'food_detail' food.pk %}">Details</a>
-                        <a class="action secondary" href="{% url 'model_form' 'food-logs' %}?food_id={{ food.pk }}">Log</a>
+                        <a class="action secondary" href="{% url 'log_food_portion' food.pk %}">Log</a>
                     </div>
                 {% endfor %}
             </div>

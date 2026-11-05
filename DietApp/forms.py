@@ -359,3 +359,15 @@ class FavoriteRecipeForm(ModelForm):
         model = FavoriteRecipe
         fields = "__all__"
 
+
+
+class PortionLogForm(forms.Form):
+    quantity = forms.DecimalField(min_value=0.01, max_value=100000, max_digits=8, decimal_places=2, help_text="Enter the amount in the food's serving unit.")
+    meal_type = forms.ChoiceField(choices=FoodLog.MEAL_TYPE_CHOICES)
+    log_date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    log_time = forms.TimeField(widget=forms.TimeInput(attrs={"type": "time"}))
+    notes = forms.CharField(required=False, max_length=1000, widget=forms.Textarea(attrs={"rows": 3}))
+
+
+class WaterAmountForm(forms.Form):
+    amount_ml = forms.IntegerField(label="Amount (ml)", min_value=1, max_value=10000)
